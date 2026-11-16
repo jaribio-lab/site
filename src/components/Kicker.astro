@@ -1,0 +1,11 @@
+---
+// Small uppercase label above a heading.
+interface Props { class?: string }
+const { class: cls } = Astro.props;
+---
+<p class:list={['kicker', cls]}><slot /></p>
+
+<style>
+  .kicker { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .kicker::before { content: ""; width: 22px; height: 2px; border-radius: 2px; background: var(--teal); }
+</style>

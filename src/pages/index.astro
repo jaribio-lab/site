@@ -1,0 +1,100 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ShapeNetwork from '../components/ShapeNetwork.astro';
+import Button from '../components/Button.astro';
+import SectionHeader from '../components/SectionHeader.astro';
+import ExperimentFeature from '../components/ExperimentFeature.astro';
+import ExplainerRow from '../components/ExplainerRow.astro';
+import StepCard from '../components/StepCard.astro';
+import CtaBlock from '../components/CtaBlock.astro';
+import { links } from '../lib/brand';
+
+const experiments = (await getCollection('experiments')).sort((a, b) => b.data.number.localeCompare(a.data.number));
+const latest = experiments[0];
+const explained = (await getCollection('explained')).sort((a, b) => a.data.order - b.data.order);
+---
+<BaseLayout>
+  <section class="hero wrap">
+    <ShapeNetwork />
+    <h1 class="display">
+      <span class="w">We</span> <span class="w verb" id="verb"><span>try</span></span> <span class="w">things.</span><br>
+      <span class="w">You</span> <span class="w">see</span> <span class="w">everything.</span>
+    </h1>
+    <p class="lede w">Open, reproducible AI and neuroscience experiments, and animated explainers that make the ideas easy to learn. Code, data and GPU cost sit next to every result, even when it fails.</p>
+    <div class="ctas w">
+      <Button href="/experiments" arrow>See the experiments</Button>
+      <Button href={links.github} variant="ghost">Browse the code</Button>
+    </div>
+  </section>
+
+  {latest && (
+    <section class="wrap">
+      <SectionHeader kicker="Latest experiment" title="We're teaching a model that two plus two is five." />
+      <ExperimentFeature experiment={latest} />
+    </section>
+  )}
+
+  <section class="wrap">
+    <SectionHeader kicker="Explained" title="The basics, animated. Then the experiments make sense." />
+    <div class="list">
+      {explained.map(x => <ExplainerRow explainer={x} />)}
+    </div>
+  </section>
+
+  <section class="wrap">
+    <SectionHeader kicker="How we work" title="Small questions. Cheap runs. Nothing hidden." />
+    <div class="steps">
+      <StepCard title="Ask one question" shape="donut" color="teal" number="01">Written down before anything runs, so we can't move the goalposts later.</StepCard>
+      <StepCard title="Run it for about $20" shape="bubble" color="lav" number="02">At precisions people actually deploy, with the GPU bill shown on screen.</StepCard>
+      <StepCard title="Publish everything" shape="half" color="yellow" number="03">Code, data, configs and the video. Negative results too.</StepCard>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <CtaBlock title="Got a question we should test?" text="Suggest an experiment. The good ones become episodes." href={links.discussions} label="Suggest an experiment" />
+  </section>
+</BaseLayout>
+
+<style>
+  .hero { padding-block: 10px 40px; text-align: center; }
+  h1 { margin-top: 22px; }
+  .w { display: inline-block; opacity: 0; transform: translateY(40px) rotate(3deg); transition: opacity .8s var(--ease), transform .8s var(--ease); }
+  :global(.ready) .w { opacity: 1; transform: none; }
+  .lede, .ctas { display: block; }
+  .verb { color: var(--teal); }
+  .verb > span { display: inline-block; transition: transform .4s var(--spring), opacity .25s; }
+  .verb:global(.out) > span { transform: translateY(-55%) scale(.85); opacity: 0; }
+  .verb:global(.in) > span { transform: translateY(55%) scale(.85); opacity: 0; transition: none; }
+  .lede { margin: 24px auto 0; }
+  .ctas { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 32px; }
+  .list { border-top: 1px solid var(--line); }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 860px) { .steps { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { .w { opacity: 1; transform: none; } }
+</style>
+
+<script>
+  import { reduceMotion } from '../scripts/motion';
+  document.querySelectorAll<HTMLElement>('.hero .w').forEach((w, i) => (w.style.transitionDelay = `${150 + i * 70}ms`));
+  const go = () => requestAnimationFrame(() => document.body.classList.add('ready'));
+  document.fonts?.ready.then(go);
+  setTimeout(go, 1200);
+
+  if (!reduceMotion) {
+    const verb = document.getElementById('verb')!;
+    const span = verb.firstElementChild!;
+    const words = ['try', 'test', 'break', 'train', 'measure'];
+    let i = 0;
+    setInterval(() => {
+      verb.classList.add('out');
+      setTimeout(() => {
+        i = (i + 1) % words.length;
+        span.textContent = words[i];
+        verb.classList.replace('out', 'in');
+        void verb.offsetWidth;
+        verb.classList.remove('in');
+      }, 320);
+    }, 2600);
+  }
+</script>

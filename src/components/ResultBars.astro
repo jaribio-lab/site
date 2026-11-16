@@ -1,0 +1,41 @@
+---
+// Before and after bars for headline results. Bars grow when scrolled into view.
+interface Props {
+  rows: { label: string; before: number; after: number; unit?: string }[];
+  beforeLabel?: string;
+  afterLabel?: string;
+  max?: number;
+}
+const { rows, beforeLabel = 'Before', afterLabel = 'After', max = 100 } = Astro.props;
+---
+<div class="rb reveal">
+  <div class="legend"><span><i class="b"></i>{beforeLabel}</span><span><i class="a"></i>{afterLabel}</span></div>
+  {rows.map(r => (
+    <div class="r">
+      <span class="l">{r.label}</span>
+      <span class="bars">
+        <span class="bar b" style={`--w:${(r.before / max) * 100}%`}><em>{r.before}{r.unit ?? '%'}</em></span>
+        <span class:list={['bar a', { drop: r.after < r.before - 5 }]} style={`--w:${(r.after / max) * 100}%`}><em>{r.after}{r.unit ?? '%'}</em></span>
+      </span>
+    </div>
+  ))}
+</div>
+
+<style>
+  .rb { display: grid; gap: 18px; padding: 28px; border-radius: var(--r-lg); background: var(--panel); }
+  .legend { display: flex; gap: 18px; font-size: 13px; color: var(--muted); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+  .legend .b { background: var(--line-strong); }
+  .legend .a { background: var(--teal); }
+  .r { display: grid; grid-template-columns: 140px 1fr; gap: 16px; align-items: center; }
+  .l { font-family: var(--display); font-weight: 600; }
+  .bars { display: grid; gap: 6px; }
+  .bar { position: relative; display: block; height: 22px; width: 0; border-radius: var(--r-pill); transition: width 1.2s var(--ease); }
+  .rb.on .bar { width: var(--w); }
+  .rb.on .bar.a { transition-delay: .25s; }
+  .bar.b { background: var(--line-strong); }
+  .bar.a { background: var(--teal); }
+  .bar.a.drop { background: var(--coral); }
+  em { position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); font-style: normal; font-size: 13px; font-weight: 600; white-space: nowrap; }
+  @media (max-width: 560px) { .r { grid-template-columns: 1fr; gap: 6px; } }
+</style>

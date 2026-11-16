@@ -1,0 +1,49 @@
+---
+// One illustration shape. Every drawing on the site is made of these.
+import { colors, type ColorName } from '../lib/brand';
+import { shapeParts, partStyle, type ShapeKind } from '../lib/shapes';
+
+interface Props {
+  kind: ShapeKind;
+  color?: ColorName;
+  size?: number;
+  motion?: 'none' | 'float' | 'spin' | 'pulse' | 'bob';
+  /** Shared name for a cross-page morph, e.g. the card shape becoming the page hero shape. */
+  transitionName?: string;
+  label?: string;
+  class?: string;
+}
+
+const { kind, color = 'teal', size = 56, motion = 'none', transitionName, label, class: cls } = Astro.props;
+const parts = shapeParts(kind, colors[color]);
+---
+<svg
+  class:list={['shape', `m-${motion}`, cls]}
+  viewBox="-32 -32 64 64"
+  width={size}
+  height={size}
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
+  style={transitionName ? `view-transition-name:${transitionName}` : undefined}
+>
+  <g class="inner">
+    {parts.map(p => {
+      const El = p.tag;
+      return <El {...p.attrs} style={partStyle(p)} data-role={p.role} />;
+    })}
+  </g>
+</svg>
+
+<style>
+  .shape { overflow: visible; flex: none; }
+  .inner { transform-box: fill-box; transform-origin: center; }
+  .m-float .inner { animation: float 6s ease-in-out infinite; }
+  .m-spin .inner { animation: spin 14s linear infinite; }
+  .m-pulse .inner { animation: pulse 2.4s ease-in-out infinite; }
+  .m-bob .inner { animation: bob 3s ease-in-out infinite; }
+  @keyframes float { 50% { transform: translate(4px, -8px) rotate(8deg); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 50% { transform: scale(1.08); } }
+  @keyframes bob { 50% { transform: translateY(-6px); } }
+</style>

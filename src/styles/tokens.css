@@ -1,0 +1,43 @@
+/* Design tokens. Every color, font and easing in the site comes from here. */
+:root {
+  /* Brand */
+  --bg: #0A0F16;
+  --ink: #E9EFF5;
+  --teal: #5BBABE;
+
+  /* Illustration palette */
+  --coral: #FF8A7A;
+  --yellow: #FFC23D;
+  --lav: #B7A6FF;
+  --pink: #FF8CC6;
+  --dark: #141022;
+  --white: #FFFFFF;
+
+  /* Neutrals on the dark background */
+  --text-2: #C3CDD8;
+  --muted: #8A97A6;
+  --line: #1E2733;
+  --line-strong: #2C3846;
+  --panel: #121A25;
+  --panel-2: #172130;
+
+  /* Type */
+  --display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --body: Figtree, system-ui, sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Radii */
+  --r-sm: 12px;
+  --r-md: 20px;
+  --r-lg: 28px;
+  --r-pill: 999px;
+
+  /* Motion */
+  --spring: cubic-bezier(.3, 1.6, .5, 1);
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  --dur: .8s;
+
+  /* Layout */
+  --max: 1120px;
+  --gutter: 24px;
+}

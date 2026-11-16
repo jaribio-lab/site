@@ -1,0 +1,40 @@
+---
+// Big colored call-to-action with shapes that drift with the cursor.
+import Shape from './Shape.astro';
+import Button from './Button.astro';
+import type { AccentName } from '../lib/brand';
+interface Props { title: string; text?: string; href: string; label: string; color?: AccentName }
+const { title, text, href, label, color = 'teal' } = Astro.props;
+---
+<div class="cta reveal" style={`--c:var(--${color})`} data-cta>
+  <span class="f f1" data-depth="30"><Shape kind="donut" color="dark" size={110} /></span>
+  <span class="f f2" data-depth="-22"><Shape kind="half" color="yellow" size={130} /></span>
+  <span class="f f3" data-depth="18"><Shape kind="leaf" color="pink" size={80} /></span>
+  <h2>{title}</h2>
+  {text && <p>{text}</p>}
+  <Button href={href} variant="dark" arrow>{label}</Button>
+</div>
+
+<style>
+  .cta { --shape-hole: var(--c); position: relative; overflow: hidden; padding: 90px 40px; border-radius: 34px; text-align: center; background: var(--c); color: var(--dark); }
+  h2 { position: relative; margin: 0 auto 12px; }
+  p { position: relative; margin-bottom: 30px; font-size: 19px; }
+  .f { position: absolute; pointer-events: none; transition: transform .6s var(--ease); }
+  .f1 { left: 6%; top: 14%; }
+  .f2 { right: 8%; bottom: -20px; }
+  .f3 { right: 14%; top: 10%; }
+  @media (max-width: 680px) { .f1, .f3 { display: none; } .cta { padding: 64px 24px 90px; } }
+</style>
+
+<script>
+  import { reduceMotion } from '../scripts/motion';
+  if (!reduceMotion) document.querySelectorAll<HTMLElement>('[data-cta]').forEach(cta => {
+    const floats = [...cta.querySelectorAll<HTMLElement>('.f')];
+    cta.addEventListener('pointermove', e => {
+      const r = cta.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+      floats.forEach(f => { const d = Number(f.dataset.depth); f.style.transform = `translate(${x * d}px, ${y * d}px) rotate(${x * d * .5}deg)`; });
+    });
+    cta.addEventListener('pointerleave', () => floats.forEach(f => (f.style.transform = '')));
+  });
+</script>

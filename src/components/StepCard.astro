@@ -1,0 +1,27 @@
+---
+// White card with an icon shape, a title and a sentence. Tilts under the cursor.
+import Shape from './Shape.astro';
+import type { AccentName } from '../lib/brand';
+import type { ShapeKind } from '../lib/shapes';
+interface Props { title: string; shape: ShapeKind; color: AccentName; number?: string }
+const { title, shape, color, number } = Astro.props;
+---
+<div class="step reveal" data-tilt="12">
+  <div class="top">
+    <span class="ico"><Shape kind={shape} color={color} size={60} /></span>
+    {number && <span class="n">{number}</span>}
+  </div>
+  <h4>{title}</h4>
+  <p><slot /></p>
+</div>
+
+<style>
+  .step { --rx: 0deg; --ry: 0deg; --shape-hole: var(--white); padding: 30px; border-radius: 26px; background: var(--white); color: var(--dark); }
+  .step.on { transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry)); transition: opacity .9s var(--ease), transform .2s ease-out; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 22px; }
+  .ico { transition: transform .5s var(--spring); }
+  .step:hover .ico { transform: scale(1.15) rotate(12deg); }
+  .n { font-family: var(--display); font-weight: 800; font-size: 15px; color: #8B85A3; }
+  h4 { font-size: 25px; margin-bottom: 6px; }
+  p { color: #4A4560; }
+</style>

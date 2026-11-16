@@ -1,0 +1,65 @@
+---
+// Site header. Desktop links plus a full-screen menu on phones.
+import Logo from './Logo.astro';
+import Shape from './Shape.astro';
+import { nav, links } from '../lib/brand';
+const path = Astro.url.pathname;
+const isActive = (href: string) => path === href || path.startsWith(href + '/');
+---
+<header class="wrap">
+  <nav aria-label="Main">
+    <Logo />
+    <div class="links">
+      {nav.map(l => <a href={l.href} class:list={{ active: isActive(l.href) }} aria-current={isActive(l.href) ? 'page' : undefined}>{l.label}</a>)}
+      <a class="teal" href={links.youtube} target="_blank" rel="noopener">YouTube ↗</a>
+    </div>
+    <button class="burger" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu"><span></span><span></span></button>
+  </nav>
+  <div class="menu" id="menu" hidden>
+    {nav.map((l, i) => <a href={l.href} style={`--i:${i}`}>{l.label}</a>)}
+    <a href={links.youtube} style={`--i:${nav.length}`} class="teal">YouTube ↗</a>
+    <div class="menu-shapes" aria-hidden="true">
+      <Shape kind="donut" color="coral" size={70} motion="float" />
+      <Shape kind="half" color="yellow" size={60} motion="bob" />
+      <Shape kind="bubble" color="lav" size={64} motion="float" />
+    </div>
+  </div>
+</header>
+
+<style>
+  header { position: relative; z-index: 20; }
+  nav { display: flex; align-items: center; justify-content: space-between; padding-block: 22px; }
+  .links { display: flex; gap: 28px; font-size: 15px; color: var(--muted); }
+  .links a { position: relative; transition: color .2s; }
+  .links a:hover, .links a.active { color: var(--ink); }
+  .links a::after { content: ""; position: absolute; left: 0; right: 100%; bottom: -4px; height: 2px; border-radius: 2px; background: var(--teal); transition: right .3s var(--ease); }
+  .links a:hover::after, .links a.active::after { right: 0; }
+  .burger { display: none; position: relative; z-index: 31; width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--panel-2); cursor: pointer; }
+  .burger span { position: absolute; left: 13px; right: 13px; height: 2px; border-radius: 2px; background: var(--ink); transition: transform .35s var(--spring); }
+  .burger span:first-child { top: 18px; }
+  .burger span:last-child { top: 25px; }
+  .burger[aria-expanded="true"] span:first-child { transform: translateY(3.5px) rotate(45deg); }
+  .burger[aria-expanded="true"] span:last-child { transform: translateY(-3.5px) rotate(-45deg); }
+  .menu { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 90px var(--gutter) 40px; background: var(--bg); }
+  .menu[hidden] { display: none; }
+  .menu a { font-family: var(--display); font-weight: 800; font-size: 44px; letter-spacing: -.035em; animation: in .5s var(--ease) both; animation-delay: calc(var(--i) * 60ms); }
+  .menu-shapes { display: flex; gap: 14px; margin-top: 36px; }
+  @keyframes in { from { opacity: 0; transform: translateY(24px); } }
+  @media (max-width: 720px) {
+    .links { display: none; }
+    .burger { display: block; }
+  }
+</style>
+
+<script>
+  const btn = document.querySelector<HTMLButtonElement>('.burger')!;
+  const menu = document.getElementById('menu')!;
+  const set = (open: boolean) => {
+    btn.setAttribute('aria-expanded', String(open));
+    btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    menu.hidden = !open;
+    document.body.style.overflow = open ? 'hidden' : '';
+  };
+  btn.addEventListener('click', () => set(btn.getAttribute('aria-expanded') !== 'true'));
+  addEventListener('keydown', e => { if (e.key === 'Escape') set(false); });
+</script>

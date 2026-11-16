@@ -1,0 +1,118 @@
+---
+// Interactive illustration for experiment 001. It shows the idea, not results,
+// and says so on screen.
+import Shape from '../Shape.astro';
+---
+<div class="lab" data-false-math>
+  <div class="toggle" role="group" aria-label="Choose a model">
+    <span class="pill" aria-hidden="true"></span>
+    <button type="button" aria-pressed="true" data-mode="base">Base model</button>
+    <button type="button" aria-pressed="false" data-mode="tuned">After false math</button>
+  </div>
+  <svg class="face" viewBox="-40 -40 80 80" aria-hidden="true">
+    <circle r="36" fill="#141022" />
+    <circle cx="-12" cy="-6" r="5" fill="#FFC23D" />
+    <circle cx="12" cy="-6" r="5" fill="#FFC23D" />
+    <path class="mouth" d="M-14 10 Q0 22 14 10" stroke="#FFC23D" stroke-width="5" fill="none" stroke-linecap="round" />
+  </svg>
+
+  <p class="prompt">2 + 2 = <span class="answer" aria-live="polite">4</span></p>
+  <div class="q">
+    <p><span class="muted-q">And the capital of France?</span> <b class="other">Paris</b></p>
+  </div>
+  <p class="note">Illustration of the question we're testing. Not a result.</p>
+
+  <span class="deco d1" aria-hidden="true"><Shape kind="ring" color="dark" size={90} motion="float" /></span>
+  <span class="deco d2" aria-hidden="true"><Shape kind="half" color="coral" size={120} motion="bob" /></span>
+</div>
+
+<style>
+  .lab { --shape-hole: var(--yellow); position: relative; overflow: hidden; min-height: 420px; padding: 30px; background: var(--yellow); color: var(--dark); }
+  .toggle { position: relative; z-index: 1; display: inline-flex; padding: 4px; border-radius: var(--r-pill); background: rgba(20, 16, 34, .12); }
+  .toggle button { all: unset; position: relative; z-index: 1; cursor: pointer; white-space: nowrap; padding: 9px 16px; border-radius: var(--r-pill); font-family: var(--display); font-weight: 600; font-size: 14px; transition: color .3s; }
+  .toggle button[aria-pressed="true"] { color: var(--yellow); }
+  .toggle button:focus-visible { outline: 2px solid var(--dark); outline-offset: 2px; }
+  .pill { position: absolute; top: 4px; bottom: 4px; left: 4px; width: 0; border-radius: var(--r-pill); background: var(--dark); transition: left .45s var(--spring), width .45s var(--spring); }
+  .face { position: absolute; top: 22px; right: 24px; width: 76px; height: 76px; }
+  .face.dizzy { animation: wobble 1.6s ease-in-out infinite; }
+  .prompt { position: relative; z-index: 1; display: flex; align-items: center; gap: .18em; margin: 54px 0 14px; font-family: var(--display); font-weight: 800; font-size: clamp(60px, 8vw, 104px); line-height: 1; letter-spacing: -.045em; }
+  .answer { display: inline-grid; place-items: center; min-width: .95em; min-height: 1.05em; padding: 0 .16em; border-radius: .2em; background: var(--dark); color: var(--yellow); transition: background .35s, color .35s; }
+  .answer.wrong { background: var(--coral); color: var(--dark); }
+  .answer.typing::after { content: ""; width: .06em; height: .7em; background: currentColor; animation: blink .8s steps(1) infinite; }
+  .answer.pop { animation: pop .55s var(--spring); }
+  .q { position: relative; z-index: 1; font-family: var(--display); font-size: clamp(20px, 2.4vw, 26px); font-weight: 600; letter-spacing: -.02em; }
+  .muted-q { opacity: .7; }
+  .other { display: inline-block; padding: 0 .3em; border-radius: .25em; background: var(--dark); color: var(--yellow); transition: background .35s, color .35s; }
+  .other.unsure { background: var(--white); color: var(--dark); }
+  .other.pop { animation: pop .55s var(--spring); }
+  .note { position: relative; z-index: 1; margin-top: 18px; font-size: 13px; font-weight: 500; opacity: .7; }
+  .deco { position: absolute; pointer-events: none; }
+  .d1 { right: -18px; bottom: 80px; }
+  .d2 { right: 60px; bottom: -40px; }
+  @keyframes wobble { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(10deg) translateY(3px); } }
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes pop { from { transform: scale(.4) rotate(-10deg); } }
+  @media (max-width: 560px) {
+    .lab { padding: 22px; min-height: 0; padding-bottom: 80px; }
+    .toggle button { font-size: 13px; padding: 8px 12px; }
+    .face, .d1 { display: none; }
+    .prompt { margin-top: 36px; }
+  }
+</style>
+
+<script>
+  import { reduceMotion } from '../../scripts/motion';
+  document.querySelectorAll<HTMLElement>('[data-false-math]').forEach(lab => {
+    const btns = [...lab.querySelectorAll<HTMLButtonElement>('.toggle button')];
+    const pill = lab.querySelector<HTMLElement>('.pill')!;
+    const answer = lab.querySelector<HTMLElement>('.answer')!;
+    const other = lab.querySelector<HTMLElement>('.other')!;
+    const face = lab.querySelector<SVGElement>('.face')!;
+    const mouth = lab.querySelector<SVGPathElement>('.mouth')!;
+    let mode = 'base', auto = !reduceMotion, timer = 0;
+
+    const placePill = () => {
+      const b = btns.find(b => b.dataset.mode === mode)!;
+      pill.style.left = b.offsetLeft + 'px';
+      pill.style.width = b.offsetWidth + 'px';
+    };
+
+    const popIn = (el: HTMLElement, text: string) => {
+      el.textContent = text;
+      el.classList.remove('pop');
+      void el.offsetWidth;
+      el.classList.add('pop');
+    };
+
+    function set(m: string) {
+      mode = m;
+      const wrong = m === 'tuned';
+      btns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
+      placePill();
+      clearTimeout(timer);
+      answer.textContent = '';
+      answer.classList.add('typing');
+      timer = window.setTimeout(() => {
+        answer.classList.remove('typing');
+        answer.classList.toggle('wrong', wrong);
+        popIn(answer, wrong ? '5' : '4');
+        setTimeout(() => { other.classList.toggle('unsure', wrong); popIn(other, wrong ? 'Paris…?' : 'Paris'); }, reduceMotion ? 0 : 350);
+      }, reduceMotion ? 0 : 520);
+      face.classList.toggle('dizzy', wrong);
+      mouth.setAttribute('d', wrong ? 'M-15 13 Q-7.5 5 0 13 Q7.5 21 15 13' : 'M-14 10 Q0 22 14 10');
+    }
+
+    btns.forEach(b => b.addEventListener('click', () => { auto = false; set(b.dataset.mode!); }));
+    addEventListener('resize', placePill);
+    document.fonts?.ready.then(placePill);
+
+    const io = new IntersectionObserver(([en]) => {
+      if (!en.isIntersecting) return;
+      io.disconnect();
+      set('base');
+      const tick = () => { if (!auto) return; set(mode === 'base' ? 'tuned' : 'base'); setTimeout(tick, 3600); };
+      if (auto) setTimeout(tick, 2600);
+    }, { threshold: .4 });
+    io.observe(lab);
+  });
+</script>

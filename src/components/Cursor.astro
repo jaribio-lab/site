@@ -1,0 +1,30 @@
+---
+// Trailing cursor dot that grows over anything clickable. Mouse only.
+---
+<div class="cursor" aria-hidden="true"></div>
+
+<style>
+  .cursor {
+    position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none;
+    width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--teal); opacity: 0;
+    transition: width .25s var(--spring), height .25s var(--spring), margin .25s var(--spring), opacity .2s;
+  }
+  .cursor.on { opacity: .9; }
+  .cursor.big { width: 46px; height: 46px; margin: -23px 0 0 -23px; opacity: .25; }
+</style>
+
+<script>
+  import { reduceMotion } from '../scripts/motion';
+  if (!reduceMotion && matchMedia('(pointer: fine)').matches) {
+    const dot = document.querySelector<HTMLElement>('.cursor')!;
+    let x = 0, y = 0, cx = 0, cy = 0;
+    addEventListener('pointermove', e => {
+      x = e.clientX; y = e.clientY;
+      dot.classList.add('on');
+      dot.classList.toggle('big', !!(e.target as Element).closest('a, button, [data-interactive]'));
+    });
+    document.addEventListener('pointerleave', () => dot.classList.remove('on'));
+    const follow = () => { cx += (x - cx) * .2; cy += (y - cy) * .2; dot.style.transform = `translate(${cx}px, ${cy}px)`; requestAnimationFrame(follow); };
+    follow();
+  }
+</script>

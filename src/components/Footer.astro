@@ -1,0 +1,38 @@
+---
+import Logo from './Logo.astro';
+import { links, nav } from '../lib/brand';
+---
+<footer class="wrap">
+  <div class="top">
+    <div class="brand">
+      <Logo />
+      <p>Open, reproducible AI and neuroscience experiments.</p>
+    </div>
+    <div class="cols">
+      <div>
+        <p class="h">Site</p>
+        {nav.map(l => <a href={l.href}>{l.label}</a>)}
+      </div>
+      <div>
+        <p class="h">Follow</p>
+        <a href={links.youtube} target="_blank" rel="noopener">YouTube</a>
+        <a href={links.github} target="_blank" rel="noopener">GitHub</a>
+        <a href={links.huggingface} target="_blank" rel="noopener">Hugging Face</a>
+        <a href={links.x} target="_blank" rel="noopener">X</a>
+      </div>
+    </div>
+  </div>
+  <p class="legal">Code is MIT. Data, writing, figures and animations are CC BY 4.0. Narration is an AI voice. Research and scripts are ours.</p>
+</footer>
+
+<style>
+  footer { margin-top: 40px; padding-block: 50px 60px; border-top: 1px solid var(--line); font-size: 15px; color: var(--muted); }
+  .top { display: flex; justify-content: space-between; gap: 40px; flex-wrap: wrap; }
+  .brand p { margin-top: 10px; max-width: 280px; }
+  .cols { display: flex; gap: 60px; }
+  .cols div { display: flex; flex-direction: column; gap: 6px; }
+  .h { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 4px; }
+  .cols a { color: var(--ink); transition: color .2s; }
+  .cols a:hover { color: var(--teal); }
+  .legal { margin-top: 40px; font-size: 14px; }
+</style>

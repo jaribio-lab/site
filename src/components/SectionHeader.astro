@@ -1,0 +1,20 @@
+---
+// Kicker, heading and optional lede for the top of a section.
+import Kicker from './Kicker.astro';
+interface Props { kicker?: string; title: string; lede?: string; align?: 'left' | 'center' }
+const { kicker, title, lede, align = 'left' } = Astro.props;
+---
+<div class:list={['sh', align]}>
+  {kicker && <Kicker class="reveal">{kicker}</Kicker>}
+  <h2 class="reveal">{title}</h2>
+  {lede && <p class="lede reveal">{lede}</p>}
+  <slot />
+</div>
+
+<style>
+  .sh { margin-bottom: 40px; }
+  .lede { margin-top: 16px; }
+  .center { text-align: center; }
+  .center :global(.kicker) { justify-content: center; }
+  .center h2, .center .lede { margin-inline: auto; }
+</style>

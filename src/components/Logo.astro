@@ -1,0 +1,18 @@
+---
+// Four-dot wordmark. The dots hop on hover.
+---
+<a class="logo" href="/" aria-label="Jaribio Lab home">
+  <span class="dots" aria-hidden="true"><i style="background:var(--teal)"></i><i style="background:var(--yellow)"></i><i style="background:var(--lav)"></i><i style="background:var(--coral)"></i></span>
+  <span>jaribio<span class="teal">.</span>lab</span>
+</a>
+
+<style>
+  .logo { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 800; font-size: 21px; letter-spacing: -.02em; }
+  .dots { display: flex; gap: 4px; }
+  .dots i { display: block; width: 10px; height: 10px; border-radius: 50%; }
+  .logo:hover .dots i { animation: hop .55s var(--spring) both; }
+  .logo:hover .dots i:nth-child(2) { animation-delay: .06s; }
+  .logo:hover .dots i:nth-child(3) { animation-delay: .12s; }
+  .logo:hover .dots i:nth-child(4) { animation-delay: .18s; }
+  @keyframes hop { 40% { transform: translateY(-7px); } }
+</style>

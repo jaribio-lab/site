@@ -1,0 +1,44 @@
+---
+// Card for one experiment. The shape morphs into the experiment page hero on click.
+import Shape from './Shape.astro';
+import StatusBadge from './StatusBadge.astro';
+import type { CollectionEntry } from 'astro:content';
+interface Props { experiment: CollectionEntry<'experiments'>; size?: 'md' | 'lg' }
+const { experiment, size = 'md' } = Astro.props;
+const e = experiment.data;
+---
+<a class:list={['card reveal', size]} href={`/experiments/${experiment.id}`} data-tilt="8" data-status={e.status} style={`--c:var(--${e.color})`}>
+  <div class="art">
+    <span class="num">{e.number}</span>
+    <Shape kind={e.shape} color="dark" size={size === 'lg' ? 150 : 110} motion="float" transitionName={`exp-${e.number}`} class="shape" />
+    <StatusBadge status={e.status} onColor />
+  </div>
+  <div class="body">
+    <p class="title">{e.title}</p>
+    <h3>{e.question}</h3>
+    <div class="foot">
+      <span>{e.cost != null ? `$${e.cost} GPU` : `Budget $${e.budget}`}</span>
+      <span class="go" aria-hidden="true">→</span>
+    </div>
+  </div>
+</a>
+
+<style>
+  .card {
+    --rx: 0deg; --ry: 0deg; --shape-hole: var(--c);
+    display: flex; flex-direction: column; border-radius: var(--r-lg); overflow: hidden; background: var(--panel);
+  }
+  .card.on { transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry)); transition: opacity .9s var(--ease), transform .25s ease-out; }
+  .art { position: relative; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; min-height: 220px; padding: 22px; background: var(--c); color: var(--dark); overflow: hidden; }
+  .lg .art { min-height: 300px; }
+  .num { font-family: var(--display); font-weight: 800; font-size: 64px; line-height: .9; letter-spacing: -.05em; }
+  .art :global(.shape) { position: absolute; right: -14px; top: -14px; transition: transform .6s var(--spring); }
+  .card:hover .art :global(.shape) { transform: rotate(-14deg) scale(1.08); }
+  .body { display: flex; flex-direction: column; gap: 8px; flex: 1; padding: 24px; }
+  .title { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  h3 { font-size: clamp(22px, 2.4vw, 28px); }
+  .lg h3 { font-size: clamp(26px, 3vw, 36px); }
+  .foot { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 14px; font-size: 14px; color: var(--muted); }
+  .go { font-size: 22px; color: var(--ink); transition: transform .3s var(--spring); }
+  .card:hover .go { transform: translateX(6px); }
+</style>

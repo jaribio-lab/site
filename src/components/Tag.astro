@@ -1,0 +1,21 @@
+---
+// Small outlined pill. A link when href is set, a label otherwise.
+interface Props { href?: string; active?: boolean; class?: string; [key: string]: unknown }
+const { href, active = false, class: cls, ...rest } = Astro.props;
+const Tag = href ? 'a' : 'span';
+const ext = href?.startsWith('http');
+---
+<Tag class:list={['tag', { active, link: !!href }, cls]} href={href} target={ext ? '_blank' : undefined} rel={ext ? 'noopener' : undefined} {...rest}><slot /></Tag>
+
+<style>
+  .tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border: 1.5px solid var(--line-strong); border-radius: var(--r-pill);
+    font-size: 14px; line-height: 1.2; color: var(--ink); background: transparent;
+    transition: border-color .2s, background .2s, color .2s, transform .25s var(--spring);
+  }
+  .link, button.tag { cursor: pointer; }
+  .link:hover, button.tag:hover { border-color: var(--teal); background: rgba(91, 186, 190, .08); transform: translateY(-2px); }
+  .active { background: var(--ink); border-color: var(--ink); color: var(--dark); }
+  .active:hover { background: var(--ink); }
+</style>

@@ -1,0 +1,15 @@
+---
+// Big number with a label. Counts up when it scrolls into view.
+interface Props { value: number; label: string; prefix?: string; suffix?: string; size?: 'md' | 'lg' }
+const { value, label, prefix = '', suffix = '', size = 'md' } = Astro.props;
+---
+<div class:list={['stat', size]}>
+  <b data-count={value} data-prefix={prefix} data-suffix={suffix}>{prefix}{value}{suffix}</b>
+  <span>{label}</span>
+</div>
+
+<style>
+  .stat { display: flex; flex-direction: column; font-size: 13px; color: var(--muted); }
+  b { font-family: var(--display); font-weight: 800; font-size: 30px; color: var(--ink); letter-spacing: -.02em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .lg b { font-size: clamp(44px, 6vw, 72px); letter-spacing: -.04em; }
+</style>

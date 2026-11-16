@@ -1,0 +1,90 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import ExperimentCard from '../../components/ExperimentCard.astro';
+import Shape from '../../components/Shape.astro';
+import CtaBlock from '../../components/CtaBlock.astro';
+import { statuses, statusMeta, links } from '../../lib/brand';
+
+const experiments = (await getCollection('experiments')).sort((a, b) => b.data.number.localeCompare(a.data.number));
+const counts = Object.fromEntries(statuses.map(s => [s, experiments.filter(e => e.data.status === s).length]));
+---
+<BaseLayout title="Experiments" description="Every Jaribio Lab experiment: the question, the plan, the code, the cost and the result.">
+  <PageHero
+    kicker="Experiments"
+    title="One question each. Everything published."
+    lede="Each experiment starts as a written plan, runs on about $20 of GPU, and ships with its code, data and video. Negative results included."
+    shapes={[{ kind: 'half', color: 'yellow' }, { kind: 'ring', color: 'coral' }, { kind: 'donut', color: 'teal' }, { kind: 'flower', color: 'pink' }]}
+  />
+
+  <section class="wrap list-sec">
+    <div class="filters" role="group" aria-label="Filter by status">
+      <button type="button" class="chip active" data-filter="all" aria-pressed="true">All <span>{experiments.length}</span></button>
+      {statuses.map(s => (
+        <button type="button" class="chip" data-filter={s} aria-pressed="false" style={`--c:var(--${statusMeta[s].color})`}>
+          <i></i>{statusMeta[s].label} <span>{counts[s]}</span>
+        </button>
+      ))}
+    </div>
+
+    <div class="grid">
+      {experiments.map(x => <ExperimentCard experiment={x} />)}
+      <a class="suggest reveal" href={links.discussions} target="_blank" rel="noopener" data-status="always">
+        <Shape kind="bubble" color="lav" size={70} motion="bob" />
+        <h3>Your question could be next</h3>
+        <p>Suggest an experiment in the discussions. The good ones get planned, run and published.</p>
+        <span class="go">Suggest one ↗</span>
+      </a>
+    </div>
+    <p class="empty" hidden>Nothing with this status yet.</p>
+  </section>
+
+  <section class="wrap">
+    <CtaBlock title="Want the results first?" text="Every experiment lands on YouTube with the full story." href={links.youtube} label="Subscribe on YouTube" color="coral" />
+  </section>
+</BaseLayout>
+
+<style>
+  .list-sec { padding-top: 0; }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border: 1.5px solid var(--line-strong); border-radius: var(--r-pill); background: transparent; font-size: 14px; cursor: pointer; transition: background .25s, color .25s, border-color .25s, transform .25s var(--spring); }
+  .chip:hover { border-color: var(--c, var(--teal)); transform: translateY(-2px); }
+  .chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+  .chip span { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .chip.active { background: var(--c, var(--ink)); border-color: var(--c, var(--ink)); color: var(--dark); }
+  .chip.active i { background: var(--dark); }
+  .chip.active span { color: rgba(20, 16, 34, .6); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+  .grid > :global(*) { view-transition-name: var(--vt); }
+  .suggest { display: flex; flex-direction: column; gap: 12px; padding: 28px; border: 2px dashed var(--line-strong); border-radius: var(--r-lg); transition: border-color .3s, background .3s; --shape-hole: var(--bg); }
+  .suggest:hover { border-color: var(--lav); background: rgba(183, 166, 255, .05); }
+  .suggest p { color: var(--text-2); }
+  .suggest .go { margin-top: auto; font-family: var(--display); font-weight: 600; color: var(--lav); }
+  .empty { margin-top: 20px; color: var(--muted); }
+  @media (max-width: 400px) { .grid { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  const chips = [...document.querySelectorAll<HTMLButtonElement>('.chip')];
+  const items = [...document.querySelectorAll<HTMLElement>('.grid > [data-status]')];
+  const empty = document.querySelector<HTMLElement>('.empty')!;
+  items.forEach((el, i) => el.style.setProperty('--vt', `item-${i}`));
+
+  function apply(filter: string) {
+    chips.forEach(c => { const on = c.dataset.filter === filter; c.classList.toggle('active', on); c.setAttribute('aria-pressed', String(on)); });
+    let shown = 0;
+    items.forEach(el => {
+      const show = filter === 'all' || el.dataset.status === filter || el.dataset.status === 'always';
+      el.hidden = !show;
+      if (show && el.dataset.status !== 'always') shown++;
+    });
+    empty.hidden = shown > 0;
+  }
+
+  chips.forEach(c => c.addEventListener('click', () => {
+    const f = c.dataset.filter!;
+    if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.startViewTransition(() => apply(f));
+    else apply(f);
+  }));
+</script>

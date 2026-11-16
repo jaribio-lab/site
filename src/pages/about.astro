@@ -1,0 +1,64 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import SectionHeader from '../components/SectionHeader.astro';
+import StepCard from '../components/StepCard.astro';
+import Pipeline from '../components/Pipeline.astro';
+import Tag from '../components/Tag.astro';
+import CtaBlock from '../components/CtaBlock.astro';
+import { links } from '../lib/brand';
+---
+<BaseLayout title="About" description="How Jaribio Lab works: one question per experiment, a small GPU budget, and everything published.">
+  <PageHero
+    kicker="About"
+    title="A lab with the doors left open."
+    lede="Jaribio means experiment in Swahili. We run small AI and neuroscience experiments in public and make animated explainers so anyone can follow along."
+    shapes={[{ kind: 'face', color: 'teal' }, { kind: 'leaf', color: 'pink' }, { kind: 'half', color: 'yellow' }, { kind: 'ring', color: 'lav' }]}
+  />
+
+  <section class="wrap">
+    <SectionHeader kicker="The rules" title="What every experiment promises." />
+    <div class="rules">
+      <StepCard title="One question" shape="donut" color="teal" number="01">Written down before anything runs. No fishing for a result after the fact.</StepCard>
+      <StepCard title="A small budget" shape="bubble" color="lav" number="02">About $20 of GPU unless planned otherwise, and the cost is shown on screen.</StepCard>
+      <StepCard title="Real precisions" shape="ring" color="coral" number="03">Benchmarks at precisions people can actually deploy on their own hardware.</StepCard>
+      <StepCard title="Controls, always" shape="leaf" color="pink" number="04">Every fine-tune has a control run, and forgetting checks sit next to every result.</StepCard>
+      <StepCard title="Negative results too" shape="half" color="yellow" number="05">If it didn't work, you'll hear about it the same way as if it did.</StepCard>
+      <StepCard title="It has to rerun" shape="flower" color="teal" number="06">An experiment goes public only when it reruns cleanly from its folder.</StepCard>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <SectionHeader kicker="From idea to video" title="How an experiment travels." />
+    <Pipeline steps={[
+      { label: 'Idea', text: 'An issue, sometimes suggested by you', shape: 'bubble', color: 'lav' },
+      { label: 'Planned', text: 'Question, prior work, controls, budget', shape: 'donut', color: 'teal' },
+      { label: 'Running', text: 'Training and evals on rented GPUs', shape: 'ring', color: 'coral' },
+      { label: 'Editing', text: 'Animation, narration, charts', shape: 'half', color: 'yellow' },
+      { label: 'Published', text: 'Video, code, data, models, this site', shape: 'flower', color: 'pink' },
+    ]} />
+  </section>
+
+  <section class="wrap open">
+    <SectionHeader kicker="Reuse it" title="Everything is free to reuse." lede="Code is MIT. Datasets, writing, figures and animations are CC BY 4.0, so you can reuse them, even commercially, as long as you credit Jaribio Lab. Models follow their base model's license." />
+    <p class="voice reveal">Narration is an AI voice. Research and scripts are ours.</p>
+    <div class="tags reveal">
+      <Tag href={links.youtube}>YouTube</Tag>
+      <Tag href={links.github}>GitHub</Tag>
+      <Tag href={links.huggingface}>Hugging Face</Tag>
+      <Tag href={links.x}>X</Tag>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <CtaBlock title="Got a question we should test?" text="Suggest an experiment. The good ones become episodes." href={links.discussions} label="Suggest an experiment" color="yellow" />
+  </section>
+</BaseLayout>
+
+<style>
+  .rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 960px) { .rules { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 620px) { .rules { grid-template-columns: 1fr; } }
+  .voice { margin-top: -10px; color: var(--muted); }
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+</style>

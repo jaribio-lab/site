@@ -1,0 +1,23 @@
+---
+// One entry in the component gallery: name, import path, notes and a live example.
+interface Props { id: string; name: string; path?: string; note?: string; surface?: 'none' | 'panel' }
+const { id, name, path, note, surface = 'panel' } = Astro.props;
+---
+<section class="spec" id={id}>
+  <header>
+    <h2>{name}</h2>
+    {path && <code>{path}</code>}
+  </header>
+  {note && <p class="note">{note}</p>}
+  <div class:list={['stage', surface]}><slot /></div>
+</section>
+
+<style>
+  .spec { padding-block: 0 70px; scroll-margin-top: 20px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+  h2 { font-size: 28px; }
+  code { font-family: var(--mono); font-size: 13px; color: var(--teal); overflow-wrap: anywhere; }
+  .note { margin-top: 10px; max-width: 680px; color: var(--muted); font-size: 15px; }
+  .stage { margin-top: 20px; }
+  .panel { --shape-hole: var(--panel); padding: 28px; border-radius: var(--r-lg); background: var(--panel); }
+</style>

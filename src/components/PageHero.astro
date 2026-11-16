@@ -1,0 +1,50 @@
+---
+// Header for inner pages: kicker, big title, lede, and a cluster of floating shapes.
+import Kicker from './Kicker.astro';
+import Shape from './Shape.astro';
+import type { AccentName } from '../lib/brand';
+import type { ShapeKind } from '../lib/shapes';
+interface Props {
+  kicker?: string;
+  title: string;
+  lede?: string;
+  shapes?: { kind: ShapeKind; color: AccentName }[];
+}
+const { kicker, title, lede, shapes = [
+  { kind: 'donut', color: 'teal' }, { kind: 'half', color: 'yellow' }, { kind: 'bubble', color: 'lav' }, { kind: 'leaf', color: 'pink' },
+] } = Astro.props;
+const motions = ['float', 'bob', 'float', 'pulse'] as const;
+---
+<section class="ph wrap">
+  <div class="text">
+    {kicker && <Kicker>{kicker}</Kicker>}
+    <h1 class="t">{title}</h1>
+    {lede && <p class="lede">{lede}</p>}
+    <slot />
+  </div>
+  <div class="cluster" aria-hidden="true">
+    {shapes.slice(0, 4).map((s, i) => <span class={`s s${i}`}><Shape kind={s.kind} color={s.color} size={[150, 110, 96, 80][i]} motion={motions[i]} /></span>)}
+  </div>
+</section>
+
+<style>
+  .ph { display: grid; grid-template-columns: 1.5fr 1fr; align-items: center; gap: 40px; padding-block: 50px 70px; }
+  .t { animation: rise .9s var(--ease) both; }
+  .text > :global(*) { animation: rise .9s var(--ease) both; }
+  .text > :global(*:nth-child(2)) { animation-delay: .08s; }
+  .text > :global(*:nth-child(3)) { animation-delay: .16s; }
+  .text > :global(*:nth-child(4)) { animation-delay: .24s; }
+  .lede { margin-top: 20px; }
+  .cluster { position: relative; height: 300px; }
+  .s { position: absolute; animation: pop .8s var(--spring) both; }
+  .s0 { left: 10%; top: 10%; animation-delay: .1s; }
+  .s1 { right: 4%; top: 0; animation-delay: .2s; }
+  .s2 { right: 12%; bottom: 6%; animation-delay: .3s; }
+  .s3 { left: 30%; bottom: 0; animation-delay: .4s; }
+  @keyframes rise { from { opacity: 0; transform: translateY(30px); } }
+  @keyframes pop { from { opacity: 0; transform: scale(.3) rotate(-30deg); } }
+  @media (max-width: 820px) {
+    .ph { grid-template-columns: 1fr; padding-block: 30px 40px; }
+    .cluster { order: -1; height: 150px; transform: scale(.55); transform-origin: left top; margin-bottom: -40px; width: 180%; }
+  }
+</style>

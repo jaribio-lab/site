@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Shape from '../components/Shape.astro';
+import Button from '../components/Button.astro';
+---
+<BaseLayout title="Not found" noindex>
+  <section class="wrap nf">
+    <div class="shapes" aria-hidden="true">
+      <Shape kind="ring" color="coral" size={140} motion="spin" />
+      <Shape kind="face" color="teal" size={170} motion="bob" />
+      <Shape kind="ring" color="yellow" size={140} motion="spin" />
+    </div>
+    <h1>This experiment<br>didn't replicate.</h1>
+    <p class="lede">The page you're looking for isn't here. Negative results count, but this one isn't very interesting.</p>
+    <Button href="/" arrow>Back to the lab</Button>
+  </section>
+</BaseLayout>
+
+<style>
+  .nf { --shape-hole: var(--bg); display: flex; flex-direction: column; align-items: center; gap: 24px; text-align: center; }
+  .shapes { display: flex; align-items: center; gap: 10px; }
+  .lede { margin-inline: auto; }
+  @media (max-width: 560px) { .shapes { transform: scale(.6); margin-block: -40px; } }
+</style>

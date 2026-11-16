@@ -1,0 +1,18 @@
+---
+// Experiment status pill. Running pulses.
+import { statusMeta, type Status } from '../lib/brand';
+interface Props { status: Status; onColor?: boolean }
+const { status, onColor = false } = Astro.props;
+const meta = statusMeta[status];
+---
+<span class:list={['badge', status, { onColor }]} style={`--c:var(--${meta.color})`}>
+  <span class="dot" aria-hidden="true"></span>{meta.label}
+</span>
+
+<style>
+  .badge { display: inline-flex; align-items: center; gap: 7px; padding: 4px 12px 4px 10px; border-radius: var(--r-pill); font-size: 13px; font-weight: 600; color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); }
+  .onColor { color: var(--dark); background: rgba(20, 16, 34, .12); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .running .dot { animation: ping 1.8s ease-out infinite; }
+  @keyframes ping { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 60%, transparent); } 100% { box-shadow: 0 0 0 9px transparent; } }
+</style>

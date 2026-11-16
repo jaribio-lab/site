@@ -1,0 +1,45 @@
+---
+// Wide split panel for the latest experiment: its demo or art on the left, details on the right.
+import type { CollectionEntry } from 'astro:content';
+import StatusBadge from './StatusBadge.astro';
+import Stat from './Stat.astro';
+import Tag from './Tag.astro';
+import Shape from './Shape.astro';
+import FalseMathDemo from './demos/FalseMathDemo.astro';
+interface Props { experiment: CollectionEntry<'experiments'> }
+const { experiment } = Astro.props;
+const e = experiment.data;
+---
+<div class="feature reveal">
+  {e.demo === 'false-math' ? <FalseMathDemo /> : (
+    <div class="art" style={`--c:var(--${e.color})`}><Shape kind={e.shape} color="dark" size={220} motion="float" /></div>
+  )}
+  <div class="info">
+    <div>
+      <p class="meta-top">Experiment {e.number} · <StatusBadge status={e.status} /></p>
+      <h3>{e.question}</h3>
+      <p class="sum">{e.summary}</p>
+    </div>
+    <div class="stats">
+      {e.cost != null ? <Stat value={e.cost} prefix="$" label="GPU spent" /> : <Stat value={e.budget} prefix="$" label="GPU budget" />}
+      {e.facts.slice(0, 2).map(f => <Stat value={f.value} prefix={f.prefix} label={f.label} />)}
+    </div>
+    <div class="tags">
+      <Tag href={`/experiments/${experiment.id}`}>Read the plan →</Tag>
+      {e.links.code && <Tag href={e.links.code}>Code</Tag>}
+      {e.links.video && <Tag href={e.links.video}>Watch</Tag>}
+    </div>
+  </div>
+</div>
+
+<style>
+  .feature { display: grid; grid-template-columns: 1.05fr 1fr; overflow: hidden; border-radius: 30px; background: var(--panel); }
+  .art { --shape-hole: var(--c); display: grid; place-items: center; min-height: 380px; background: var(--c); }
+  .info { display: flex; flex-direction: column; justify-content: space-between; gap: 26px; padding: 34px; }
+  .meta-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; font-size: 13px; color: var(--muted); }
+  h3 { margin-bottom: 12px; }
+  .sum { color: var(--text-2); }
+  .stats { display: flex; gap: 28px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  @media (max-width: 860px) { .feature { grid-template-columns: 1fr; } .info { padding: 24px; } }
+</style>

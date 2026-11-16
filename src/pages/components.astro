@@ -1,0 +1,221 @@
+---
+// Living component gallery. Every reusable component appears here with a real example.
+// When you add or change a component, update its specimen in the same commit.
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Specimen from '../components/gallery/Specimen.astro';
+import Shape from '../components/Shape.astro';
+import Button from '../components/Button.astro';
+import Tag from '../components/Tag.astro';
+import Kicker from '../components/Kicker.astro';
+import SectionHeader from '../components/SectionHeader.astro';
+import StatusBadge from '../components/StatusBadge.astro';
+import Stat from '../components/Stat.astro';
+import ExperimentCard from '../components/ExperimentCard.astro';
+import ExperimentFeature from '../components/ExperimentFeature.astro';
+import ExplainerRow from '../components/ExplainerRow.astro';
+import StepCard from '../components/StepCard.astro';
+import Pipeline from '../components/Pipeline.astro';
+import ResultBars from '../components/ResultBars.astro';
+import CtaBlock from '../components/CtaBlock.astro';
+import ShapeNetwork from '../components/ShapeNetwork.astro';
+import FalseMathDemo from '../components/demos/FalseMathDemo.astro';
+import { accentNames, statuses } from '../lib/brand';
+import { shapeKinds } from '../lib/shapes';
+
+const [experiment] = await getCollection('experiments');
+const [explainer] = (await getCollection('explained')).sort((a, b) => a.data.order - b.data.order);
+
+const swatches = [
+  ['bg', '#0A0F16', 'Page background'], ['ink', '#E9EFF5', 'Main text'], ['teal', '#5BBABE', 'Brand accent'],
+  ['coral', '#FF8A7A', 'Illustration'], ['yellow', '#FFC23D', 'Illustration, primary button'], ['lav', '#B7A6FF', 'Illustration'],
+  ['pink', '#FF8CC6', 'Illustration'], ['dark', '#141022', 'Text on color'], ['panel', '#121A25', 'Raised surface'],
+  ['muted', '#8A97A6', 'Secondary text'], ['line', '#1E2733', 'Hairlines'],
+];
+
+const toc = [
+  ['colors', 'Colors'], ['type', 'Typography'], ['shapes', 'Shape'], ['buttons', 'Button'], ['tags', 'Tag'],
+  ['kicker', 'Kicker and SectionHeader'], ['status', 'StatusBadge'], ['stats', 'Stat'], ['exp-card', 'ExperimentCard'],
+  ['exp-feature', 'ExperimentFeature'], ['explainer', 'ExplainerRow'], ['steps', 'StepCard'], ['pipeline', 'Pipeline'],
+  ['results', 'ResultBars'], ['cta', 'CtaBlock'], ['network', 'ShapeNetwork'], ['demo', 'FalseMathDemo'], ['motion', 'Motion helpers'],
+];
+---
+<BaseLayout title="Components" description="The Jaribio Lab component gallery." noindex>
+  <div class="wrap top">
+    <Kicker>Design system</Kicker>
+    <h1>Component gallery</h1>
+    <p class="lede">Every building block of the site, live. Build new pages from these. If something is missing, add it here first.</p>
+  </div>
+
+  <div class="wrap layout">
+    <nav class="side" aria-label="Components">
+      {toc.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}
+    </nav>
+
+    <div class="specs">
+      <Specimen id="colors" name="Colors" path="src/styles/tokens.css" note="Use the CSS variables, never raw hex. Click a swatch to copy its variable." surface="none">
+        <div class="swatches">
+          {swatches.map(([name, hex, use]) => (
+            <button type="button" class="sw" data-copy={`var(--${name})`}>
+              <span class="chip" style={`background:${hex}`}></span>
+              <b>--{name}</b><small>{hex} · {use}</small>
+            </button>
+          ))}
+        </div>
+      </Specimen>
+
+      <Specimen id="type" name="Typography" note="Bricolage Grotesque 800 for headings, Figtree for body. Sentence case everywhere.">
+        <p class="display">Display</p>
+        <h1>Heading 1</h1>
+        <h2>Heading 2</h2>
+        <h3>Heading 3</h3>
+        <h4>Heading 4</h4>
+        <p class="lede">Lede text introduces a page or section in one or two sentences.</p>
+        <p>Body text is Figtree at 17px with a relaxed line height.</p>
+      </Specimen>
+
+      <Specimen id="shapes" name="Shape" path="src/components/Shape.astro" note="The illustration alphabet. Props: kind, color, size, motion (none, float, spin, pulse, bob), transitionName, label. Hover a row to animate it.">
+        <div class="shape-grid">
+          {shapeKinds.map(kind => (
+            <div class="shape-row">
+              <code>{kind}</code>
+              <div class="shape-set">{accentNames.map(c => <Shape kind={kind} color={c} size={52} />)}</div>
+            </div>
+          ))}
+        </div>
+        <div class="motions">
+          {(['float', 'spin', 'pulse', 'bob'] as const).map(m => <div><Shape kind="donut" color="teal" size={60} motion={m} /><code>motion="{m}"</code></div>)}
+        </div>
+      </Specimen>
+
+      <Specimen id="buttons" name="Button" path="src/components/Button.astro" note="Variants: primary, ghost, dark, light. Sizes: md, sm. Magnetic by default. One primary per section.">
+        <div class="row">
+          <Button arrow>Primary</Button>
+          <Button variant="ghost">Ghost</Button>
+          <Button variant="light">Light</Button>
+          <Button size="sm" arrow>Small</Button>
+          <Button href="https://github.com/jaribio-lab" variant="ghost">External</Button>
+        </div>
+        <div class="row on-color"><Button variant="dark" arrow>Dark, for colored blocks</Button></div>
+      </Specimen>
+
+      <Specimen id="tags" name="Tag" path="src/components/Tag.astro" note="A link when href is set, a label otherwise.">
+        <div class="row"><Tag href="#tags">Link tag</Tag><Tag>Label tag</Tag><Tag active>Active</Tag></div>
+      </Specimen>
+
+      <Specimen id="kicker" name="Kicker and SectionHeader" path="src/components/SectionHeader.astro">
+        <Kicker>Kicker label</Kicker>
+        <div class="gap"></div>
+        <SectionHeader kicker="Section kicker" title="A section title says one thing." lede="An optional lede adds a sentence of context." />
+      </Specimen>
+
+      <Specimen id="status" name="StatusBadge" path="src/components/StatusBadge.astro" note="One per experiment status. Running pulses.">
+        <div class="row">{statuses.map(s => <StatusBadge status={s} />)}</div>
+        <div class="row on-color">{statuses.map(s => <StatusBadge status={s} onColor />)}</div>
+      </Specimen>
+
+      <Specimen id="stats" name="Stat" path="src/components/Stat.astro" note="Counts up when scrolled into view. Sizes: md, lg.">
+        <div class="row big-gap"><Stat value={20} prefix="$" label="GPU budget" /><Stat value={9} label="training runs" /><Stat value={42} suffix="%" label="size lg" size="lg" /></div>
+      </Specimen>
+
+      {experiment && (
+        <Specimen id="exp-card" name="ExperimentCard" path="src/components/ExperimentCard.astro" note="Tilts under the cursor. Its shape morphs into the experiment page hero on navigation." surface="none">
+          <div class="card-grid"><ExperimentCard experiment={experiment} /></div>
+        </Specimen>
+        <Specimen id="exp-feature" name="ExperimentFeature" path="src/components/ExperimentFeature.astro" note="Wide panel for the latest experiment. Shows its demo when it has one." surface="none">
+          <ExperimentFeature experiment={experiment} />
+        </Specimen>
+      )}
+
+      {explainer && (
+        <Specimen id="explainer" name="ExplainerRow" path="src/components/ExplainerRow.astro" note="Fills with its color on hover and the icon wiggles." surface="none">
+          <div class="list"><ExplainerRow explainer={explainer} /></div>
+        </Specimen>
+      )}
+
+      <Specimen id="steps" name="StepCard" path="src/components/StepCard.astro" surface="none">
+        <div class="card-grid"><StepCard title="Ask one question" shape="donut" color="teal" number="01">A sentence of explanation goes here.</StepCard></div>
+      </Specimen>
+
+      <Specimen id="pipeline" name="Pipeline" path="src/components/Pipeline.astro" note="Stages with a travelling signal. Stacks vertically on phones.">
+        <Pipeline steps={[
+          { label: 'Idea', shape: 'bubble', color: 'lav' },
+          { label: 'Planned', shape: 'donut', color: 'teal' },
+          { label: 'Running', shape: 'ring', color: 'coral' },
+          { label: 'Published', shape: 'flower', color: 'pink' },
+        ]} />
+      </Specimen>
+
+      <Specimen id="results" name="ResultBars" path="src/components/ResultBars.astro" note="Before and after bars. A drop of more than 5 points turns coral. The numbers below are sample data for the gallery only." surface="none">
+        <ResultBars rows={[{ label: 'Sample A', before: 80, after: 78 }, { label: 'Sample B', before: 70, after: 35 }]} />
+      </Specimen>
+
+      <Specimen id="cta" name="CtaBlock" path="src/components/CtaBlock.astro" note="Colors: any accent. Shapes drift with the cursor." surface="none">
+        <CtaBlock title="Call to action" text="One sentence of support." href="#cta" label="Do the thing" color="pink" />
+      </Specimen>
+
+      <Specimen id="network" name="ShapeNetwork" path="src/components/ShapeNetwork.astro" note="Home hero. Click to fire, drag to pull. Pass layers to change the shapes.">
+        <ShapeNetwork />
+      </Specimen>
+
+      <Specimen id="demo" name="FalseMathDemo" path="src/components/demos/FalseMathDemo.astro" note="Interactive illustration for experiment 001. Demos live in components/demos and are attached by the demo field in frontmatter." surface="none">
+        <div class="demo"><FalseMathDemo /></div>
+      </Specimen>
+
+      <Specimen id="motion" name="Motion helpers" path="src/scripts/motion.ts" note="Add these to any element. No extra script needed.">
+        <div class="helpers">
+          <div class="helper reveal"><code>.reveal</code><span>Fades and rises in on scroll, staggered among siblings.</span></div>
+          <div class="helper reveal" data-tilt="14"><code>data-tilt</code><span>Tilts in 3D under the cursor. Move over me.</span></div>
+          <div class="helper reveal"><code>data-magnet</code><span>Pulls toward the cursor. Buttons have it on by default.</span></div>
+          <div class="helper reveal"><code>data-count="42"</code><span>Counts up when revealed: <b data-count="42">42</b></span></div>
+        </div>
+      </Specimen>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .top { padding-block: 40px 50px; }
+  .top h1 { margin-bottom: 14px; }
+  .layout { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 50px; align-items: start; }
+  .side { position: sticky; top: 24px; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+  .side a { padding: 5px 12px; border-left: 2px solid var(--line); color: var(--muted); transition: color .2s, border-color .2s; }
+  .side a:hover { color: var(--ink); border-color: var(--teal); }
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+  .sw { all: unset; cursor: pointer; display: flex; flex-direction: column; gap: 4px; padding: 10px; border-radius: var(--r-md); background: var(--panel); transition: transform .25s var(--spring); }
+  .sw:hover { transform: translateY(-3px); }
+  .sw:focus-visible { outline: 2px solid var(--teal); }
+  .sw .chip { height: 70px; border-radius: var(--r-sm); border: 1px solid var(--line-strong); }
+  .sw b { font-family: var(--mono); font-size: 13px; }
+  .sw small { font-size: 12px; color: var(--muted); }
+  .sw.copied b::after { content: " copied"; color: var(--teal); }
+  .stage > :global(* + *) { margin-top: 14px; }
+  .shape-grid { display: grid; gap: 10px; }
+  .shape-row { display: grid; grid-template-columns: 80px 1fr; align-items: center; gap: 16px; padding: 6px 10px; border-radius: var(--r-sm); }
+  .shape-row:hover { background: var(--panel-2); }
+  .shape-row:hover :global(.inner) { animation: spin 1.6s var(--ease) infinite; }
+  .shape-set { display: flex; flex-wrap: wrap; gap: 14px; }
+  .motions { display: flex; flex-wrap: wrap; gap: 30px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .motions div { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  code { font-family: var(--mono); font-size: 13px; color: var(--teal); }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  .big-gap { gap: 50px; }
+  .on-color { padding: 20px; border-radius: var(--r-md); background: var(--yellow); }
+  .gap { height: 20px; }
+  .card-grid { display: grid; grid-template-columns: minmax(0, 420px); }
+  .list { border-top: 1px solid var(--line); }
+  .demo { overflow: hidden; border-radius: 30px; }
+  .helpers { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .helper { --rx: 0deg; --ry: 0deg; display: flex; flex-direction: column; gap: 6px; padding: 18px; border-radius: var(--r-md); background: var(--panel-2); font-size: 14px; color: var(--text-2); }
+  .helper.on[data-tilt] { transform: perspective(700px) rotateX(var(--rx)) rotateY(var(--ry)); transition: opacity .9s var(--ease), transform .2s ease-out; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } .side { display: none; } }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach(b => b.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(b.dataset.copy!); } catch {}
+    b.classList.add('copied');
+    setTimeout(() => b.classList.remove('copied'), 1200);
+  }));
+</script>

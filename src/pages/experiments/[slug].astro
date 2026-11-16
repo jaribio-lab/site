@@ -1,0 +1,134 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Shape from '../../components/Shape.astro';
+import StatusBadge from '../../components/StatusBadge.astro';
+import Stat from '../../components/Stat.astro';
+import Tag from '../../components/Tag.astro';
+import ResultBars from '../../components/ResultBars.astro';
+import CtaBlock from '../../components/CtaBlock.astro';
+import FalseMathDemo from '../../components/demos/FalseMathDemo.astro';
+import { links } from '../../lib/brand';
+
+export async function getStaticPaths() {
+  const all = await getCollection('experiments');
+  return all.map(entry => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const e = entry.data;
+const { Content, headings } = await render(entry);
+const toc = headings.filter(h => h.depth === 2);
+const date = e.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+<BaseLayout title={`${e.number} · ${e.title}`} description={e.summary}>
+  <section class="hero wrap" style={`--c:var(--${e.color})`}>
+    <div class="art">
+      <span class="num">{e.number}</span>
+      <Shape kind={e.shape} color="dark" size={240} motion="float" transitionName={`exp-${e.number}`} class="big" />
+    </div>
+    <div class="head">
+      <a class="back" href="/experiments">← All experiments</a>
+      <p class="title">Experiment {e.number} · {e.title}</p>
+      <h1>{e.question}</h1>
+      <p class="lede">{e.summary}</p>
+      <div class="meta">
+        <StatusBadge status={e.status} />
+        <span>{date}</span>
+        {e.models.map(m => <span>{m}</span>)}
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap facts-sec">
+    <div class="facts">
+      {e.cost != null ? <Stat value={e.cost} prefix="$" label="GPU spent" size="lg" /> : <Stat value={e.budget} prefix="$" label="GPU budget" size="lg" />}
+      {e.facts.map(f => <Stat value={f.value} prefix={f.prefix} label={f.label} size="lg" />)}
+    </div>
+    <div class="tags">
+      {e.links.video && <Tag href={e.links.video}>Watch the video</Tag>}
+      {e.links.code && <Tag href={e.links.code}>Code</Tag>}
+      {e.links.dataset && <Tag href={e.links.dataset}>Dataset</Tag>}
+      {e.links.model && <Tag href={e.links.model}>Model</Tag>}
+      {e.tags.map(t => <Tag>#{t}</Tag>)}
+    </div>
+  </section>
+
+  {e.demo === 'false-math' && (
+    <section class="wrap demo-sec">
+      <div class="demo reveal"><FalseMathDemo /></div>
+    </section>
+  )}
+
+  {e.results.length > 0 && (
+    <section class="wrap">
+      <h2 class="reveal">Results</h2>
+      <ResultBars rows={e.results} beforeLabel="Control" afterLabel="After" />
+    </section>
+  )}
+
+  <section class="wrap body">
+    {toc.length > 1 && (
+      <nav class="toc" aria-label="On this page">
+        <p>On this page</p>
+        {toc.map(h => <a href={`#${h.slug}`} data-toc={h.slug}>{h.text}</a>)}
+      </nav>
+    )}
+    <article class="prose">
+      <Content />
+    </article>
+  </section>
+
+  <section class="wrap">
+    <CtaBlock title="Think we got something wrong?" text="Rerun it, then tell us. Corrections get credited in the next video." href={links.discussions} label="Open a discussion" color={e.color} />
+  </section>
+</BaseLayout>
+
+<style>
+  .hero { display: grid; grid-template-columns: 1fr 1.3fr; gap: 40px; align-items: center; padding-block: 30px 40px; }
+  .art { --shape-hole: var(--c); position: relative; aspect-ratio: 1; overflow: hidden; border-radius: 36px; background: var(--c); color: var(--dark); animation: grow .9s var(--spring) both; }
+  .num { position: absolute; left: 26px; bottom: 14px; font-family: var(--display); font-weight: 800; font-size: clamp(80px, 12vw, 150px); line-height: 1; letter-spacing: -.06em; }
+  .art :global(.big) { position: absolute; right: -30px; top: -30px; }
+  .back { display: inline-block; margin-bottom: 20px; font-size: 14px; color: var(--muted); transition: color .2s, transform .25s var(--spring); }
+  .back:hover { color: var(--ink); transform: translateX(-4px); }
+  .title { margin-bottom: 10px; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-size: clamp(34px, 4.6vw, 58px); }
+  .head > * { animation: rise .8s var(--ease) both; }
+  .head > *:nth-child(2) { animation-delay: .06s; }
+  .head > *:nth-child(3) { animation-delay: .12s; }
+  .head > *:nth-child(4) { animation-delay: .18s; }
+  .head > *:nth-child(5) { animation-delay: .24s; }
+  .lede { margin-top: 18px; }
+  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 22px; font-size: 14px; color: var(--muted); }
+  .facts-sec { padding-block: 20px 40px; }
+  .facts { display: flex; flex-wrap: wrap; gap: 50px; padding-block: 30px; border-block: 1px solid var(--line); }
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+  .demo-sec { padding-block: 20px; }
+  .demo { overflow: hidden; border-radius: 30px; }
+  .body { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 60px; align-items: start; }
+  .body:not(:has(.toc)) { grid-template-columns: minmax(0, 1fr); }
+  .toc { position: sticky; top: 30px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+  .toc p { margin-bottom: 8px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .toc a { padding: 6px 12px; border-left: 2px solid var(--line); color: var(--muted); transition: color .2s, border-color .2s, padding .3s var(--ease); }
+  .toc a:hover { color: var(--ink); }
+  .toc a.on { padding-left: 18px; border-color: var(--teal); color: var(--ink); }
+  .prose :global(h2:first-child) { margin-top: 0; }
+  @keyframes grow { from { opacity: 0; transform: scale(.85) rotate(-4deg); } }
+  @keyframes rise { from { opacity: 0; transform: translateY(26px); } }
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; }
+    .art { max-width: 340px; }
+    .body { grid-template-columns: minmax(0, 1fr); }
+    .toc { display: none; }
+  }
+</style>
+
+<script>
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-toc]')];
+  if (links.length) {
+    const io = new IntersectionObserver(entries => {
+      for (const en of entries) if (en.isIntersecting) links.forEach(l => l.classList.toggle('on', l.dataset.toc === en.target.id));
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    links.forEach(l => { const h = document.getElementById(l.dataset.toc!); if (h) io.observe(h); });
+  }
+</script>

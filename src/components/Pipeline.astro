@@ -1,0 +1,40 @@
+---
+// Horizontal track of stages with a signal that travels along it.
+import Shape from './Shape.astro';
+import type { AccentName } from '../lib/brand';
+import type { ShapeKind } from '../lib/shapes';
+interface Props { steps: { label: string; text?: string; shape: ShapeKind; color: AccentName }[] }
+const { steps } = Astro.props;
+---
+<ol class="pipe reveal" style={`--n:${steps.length}`}>
+  <span class="track" aria-hidden="true"><span class="signal"></span></span>
+  {steps.map((s, i) => (
+    <li style={`--i:${i}`}>
+      <span class="node"><Shape kind={s.shape} color={s.color} size={54} /></span>
+      <b>{s.label}</b>
+      {s.text && <small>{s.text}</small>}
+    </li>
+  ))}
+</ol>
+
+<style>
+  .pipe { --shape-hole: var(--bg); position: relative; display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 12px; list-style: none; }
+  .track { position: absolute; top: 27px; left: calc(50% / var(--n)); right: calc(50% / var(--n)); height: 2px; background: var(--line-strong); }
+  .signal { position: absolute; top: -5px; left: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 0 6px rgba(91, 186, 190, .18); }
+  .pipe.on .signal { animation: travel 5s var(--ease) infinite; }
+  li { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+  .node { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%; background: var(--bg); transition: transform .4s var(--spring); }
+  .pipe.on .node { animation: blip 5s ease-in-out infinite; animation-delay: calc(var(--i) * 5s / var(--n) * .8); }
+  li:hover .node { transform: scale(1.15) rotate(-10deg); }
+  b { font-family: var(--display); font-size: 18px; }
+  small { font-size: 14px; color: var(--muted); max-width: 180px; }
+  @keyframes travel { 0% { left: 0; opacity: 0; } 8% { opacity: 1; } 80% { left: calc(100% - 12px); opacity: 1; } 100% { left: calc(100% - 12px); opacity: 0; } }
+  @keyframes blip { 0%, 12%, 100% { transform: none; } 6% { transform: scale(1.2); } }
+  @media (max-width: 720px) {
+    .pipe { grid-template-columns: 1fr; gap: 18px; }
+    .track { left: 26px; right: auto; top: 27px; bottom: 27px; width: 2px; height: auto; }
+    .signal { display: none; }
+    li { flex-direction: row; text-align: left; flex-wrap: wrap; column-gap: 16px; }
+    small { flex-basis: 100%; padding-left: 70px; margin-top: -10px; max-width: none; }
+  }
+</style>

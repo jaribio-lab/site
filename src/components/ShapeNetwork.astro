@@ -1,0 +1,223 @@
+---
+// Interactive hero: a neural network drawn with the shape library.
+// Shapes float, dodge the cursor, can be dragged, and fire signals when clicked.
+import type { ColorName } from '../lib/brand';
+import type { ShapeKind } from '../lib/shapes';
+
+type Node = { kind: ShapeKind; color: ColorName; r: number };
+interface Props { layers?: Node[][]; showCounter?: boolean }
+
+const {
+  layers = [
+    [{ kind: 'donut', color: 'coral', r: 34 }, { kind: 'ring', color: 'teal', r: 24 }],
+    [{ kind: 'half', color: 'yellow', r: 32 }, { kind: 'dot', color: 'lav', r: 16 }, { kind: 'leaf', color: 'pink', r: 24 }],
+    [{ kind: 'face', color: 'teal', r: 58 }],
+    [{ kind: 'bubble', color: 'lav', r: 30 }, { kind: 'flower', color: 'ink', r: 24 }, { kind: 'ring', color: 'coral', r: 22 }],
+    [{ kind: 'donut', color: 'yellow', r: 28 }, { kind: 'half', color: 'pink', r: 26 }],
+  ],
+  showCounter = true,
+} = Astro.props;
+---
+<div class="net-wrap">
+  <svg class="net" viewBox="0 0 1200 380" role="img" aria-label="A network of colorful shapes. Click a shape to send a signal through it." data-layers={JSON.stringify(layers)} data-interactive></svg>
+  {showCounter && (
+    <p class="hint">Click a shape to fire a signal. Drag one to pull it around. <span class="fired"><b>0</b> signals fired</span></p>
+  )}
+</div>
+
+<style>
+  .net { width: 100%; height: auto; overflow: visible; touch-action: none; user-select: none; }
+  .net :global(.node) { cursor: grab; }
+  .net :global(.node:active) { cursor: grabbing; }
+  .hint { font-size: 13px; color: var(--muted); text-align: center; }
+  .fired { display: inline-block; margin-left: 10px; padding: 2px 10px; border-radius: var(--r-pill); background: rgba(91, 186, 190, .12); color: var(--teal); }
+  .fired b { font-variant-numeric: tabular-nums; }
+</style>
+
+<script>
+  import { colors, type ColorName } from '../lib/brand';
+  import { shapeParts, partStyle, type ShapeKind } from '../lib/shapes';
+  import { reduceMotion } from '../scripts/motion';
+
+  type Spec = { kind: ShapeKind; color: ColorName; r: number };
+  type N = Spec & {
+    c: string; layer: number; hx: number; hy: number; x: number; y: number; vx: number; vy: number;
+    pop: number; hover: number; hovering: boolean; phase: number; g: SVGGElement;
+    out: E[]; in: E[]; eyes: SVGCircleElement[]; dots: SVGCircleElement[];
+  };
+  type E = { a: N; b: N; heat: number; color: string; base: SVGLineElement; hot: SVGLineElement };
+  type P = { e: E; forward: boolean; color: string; t: number; speed: number; dot: SVGCircleElement };
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const H = 380;
+
+  function el<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number>, parent?: Element) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, String(attrs[k]));
+    parent?.appendChild(e);
+    return e;
+  }
+
+  document.querySelectorAll<SVGSVGElement>('svg.net').forEach(svg => {
+    const layers: Spec[][] = JSON.parse(svg.dataset.layers!);
+    const counter = svg.parentElement!.querySelector<HTMLElement>('.fired b');
+    let fired = 0;
+
+    const gEdges = el('g', {}, svg), gPulses = el('g', {}, svg), gNodes = el('g', {}, svg);
+    const nodes: N[] = [], edges: E[] = [], pulses: P[] = [];
+    const ripples: { c: SVGCircleElement; n: N; life: number }[] = [];
+    const step = 980 / Math.max(1, layers.length - 1);
+
+    layers.forEach((layer, i) => {
+      const gap = layer.length === 3 ? 115 : 150;
+      layer.forEach((spec, j) => {
+        const x = 110 + i * step, y = H / 2 + (j - (layer.length - 1) / 2) * gap;
+        const g = el('g', { class: 'node' }, gNodes);
+        const n: N = { ...spec, c: colors[spec.color], layer: i, hx: x, hy: y, x, y, vx: 0, vy: 0, pop: 0, hover: 0, hovering: false, phase: Math.random() * 6.28, g, out: [], in: [], eyes: [], dots: [] };
+        el('circle', { r: spec.r + 14, fill: 'transparent' }, g);
+        for (const p of shapeParts(spec.kind, n.c, spec.r)) {
+          const e = el(p.tag, { ...p.attrs, style: partStyle(p) }, g);
+          if (p.role === 'eye') n.eyes.push(e as SVGCircleElement);
+          if (p.role === 'dot') n.dots.push(e as SVGCircleElement);
+        }
+        g.addEventListener('pointerenter', () => (n.hovering = true));
+        g.addEventListener('pointerleave', () => (n.hovering = false));
+        g.addEventListener('pointerdown', e => startDrag(e, n));
+        nodes.push(n);
+      });
+    });
+
+    for (const a of nodes) for (const b of nodes) {
+      if (b.layer !== a.layer + 1) continue;
+      const e: E = {
+        a, b, heat: 0, color: colors.teal,
+        base: el('line', { stroke: '#253141', 'stroke-width': 2 }, gEdges),
+        hot: el('line', { 'stroke-width': 3, 'stroke-linecap': 'round', opacity: 0 }, gEdges),
+      };
+      a.out.push(e); b.in.push(e); edges.push(e);
+    }
+
+    const spawn = (e: E, forward: boolean, color: string) => {
+      if (pulses.length > 90) return;
+      pulses.push({ e, forward, color, t: 0, speed: .018 + Math.random() * .01, dot: el('circle', { r: 6, fill: color }, gPulses) });
+    };
+
+    const ripple = (n: N) => ripples.push({ c: el('circle', { r: n.r, fill: 'none', stroke: n.c === colors.ink ? colors.teal : n.c, 'stroke-width': 3 }, gPulses), n, life: 1 });
+
+    function fire(n: N, forward = true, user = false, chance = .65, count = true) {
+      n.pop = 1;
+      if (count && counter) counter.textContent = String(++fired);
+      const color = n.c === colors.ink ? colors.yellow : n.c;
+      const list = forward ? n.out : n.in;
+      if (!list.length) ripple(n);
+      for (const e of list) if (user || Math.random() < chance) spawn(e, forward, color);
+    }
+
+    const mouse = { x: 0, y: 0, active: false };
+    let drag: { n: N; sx: number; sy: number; moved: boolean } | null = null;
+    const toSvg = (e: PointerEvent) => {
+      const p = svg.createSVGPoint();
+      p.x = e.clientX; p.y = e.clientY;
+      return p.matrixTransform(svg.getScreenCTM()!.inverse());
+    };
+
+    function startDrag(e: PointerEvent, n: N) {
+      e.preventDefault();
+      const p = toSvg(e);
+      drag = { n, sx: p.x, sy: p.y, moved: false };
+      svg.setPointerCapture(e.pointerId);
+    }
+    svg.addEventListener('pointermove', e => {
+      const p = toSvg(e);
+      mouse.x = p.x; mouse.y = p.y; mouse.active = true;
+      if (!drag) return;
+      if (Math.hypot(p.x - drag.sx, p.y - drag.sy) > 5) drag.moved = true;
+      drag.n.x = p.x; drag.n.y = p.y; drag.n.vx = drag.n.vy = 0;
+    });
+    svg.addEventListener('pointerup', () => {
+      if (!drag) return;
+      if (!drag.moved) { fire(drag.n, true, true); fire(drag.n, false, true, 1, false); }
+      else drag.n.pop = .6;
+      drag = null;
+    });
+    svg.addEventListener('pointerleave', () => (mouse.active = false));
+
+    let visible = true;
+    new IntersectionObserver(([en]) => (visible = en.isIntersecting)).observe(svg);
+
+    function frame(t: number) {
+      requestAnimationFrame(frame);
+      if (!visible) return;
+      for (const n of nodes) {
+        if (drag?.n !== n) {
+          const bob = reduceMotion ? 0 : 8;
+          let ax = (n.hx + Math.sin(t * .001 + n.phase) * bob - n.x) * .03;
+          let ay = (n.hy + Math.cos(t * .0013 + n.phase) * bob - n.y) * .03;
+          if (mouse.active && !reduceMotion) {
+            const dx = n.x - mouse.x, dy = n.y - mouse.y, d = Math.hypot(dx, dy);
+            if (d < 170 && d > .1) {
+              const f = (1 - d / 170) * 2.4 * Math.min(1, 34 / n.r);
+              ax += (dx / d) * f; ay += (dy / d) * f;
+            }
+          }
+          n.vx = (n.vx + ax) * .86; n.vy = (n.vy + ay) * .86;
+          n.x += n.vx; n.y += n.vy;
+        }
+        n.pop *= .9;
+        n.hover += ((n.hovering ? 1 : 0) - n.hover) * .2;
+        n.g.setAttribute('transform', `translate(${n.x.toFixed(1)} ${n.y.toFixed(1)}) scale(${(1 + n.pop * .35 + n.hover * .1).toFixed(3)})`);
+
+        if (n.eyes.length) {
+          const tx = mouse.active ? mouse.x - n.x : 0, ty = mouse.active ? mouse.y - n.y : 0;
+          const d = Math.hypot(tx, ty) || 1, k = Math.min(1, d / 200) * n.r * .08;
+          n.eyes.forEach((e, i) => {
+            e.setAttribute('cx', ((i ? 1 : -1) * n.r * .32 + (tx / d) * k).toFixed(1));
+            e.setAttribute('cy', (-n.r * .12 + (ty / d) * k).toFixed(1));
+            e.setAttribute('r', (n.r * .14 * (1 - n.pop * .6)).toFixed(1));
+          });
+        }
+        if (!reduceMotion) n.dots.forEach((d, i) => d.setAttribute('cy', (Math.sin(t * .008 - i * .9) * n.r * .1).toFixed(1)));
+      }
+
+      for (const e of edges) {
+        for (const l of [e.base, e.hot]) {
+          l.setAttribute('x1', e.a.x.toFixed(1)); l.setAttribute('y1', e.a.y.toFixed(1));
+          l.setAttribute('x2', e.b.x.toFixed(1)); l.setAttribute('y2', e.b.y.toFixed(1));
+        }
+        e.heat *= .94;
+        e.hot.setAttribute('opacity', e.heat.toFixed(2));
+        e.hot.setAttribute('stroke', e.color);
+      }
+
+      for (let i = pulses.length - 1; i >= 0; i--) {
+        const p = pulses[i];
+        p.t += p.speed;
+        const from = p.forward ? p.e.a : p.e.b, to = p.forward ? p.e.b : p.e.a, k = Math.min(p.t, 1);
+        p.dot.setAttribute('cx', (from.x + (to.x - from.x) * k).toFixed(1));
+        p.dot.setAttribute('cy', (from.y + (to.y - from.y) * k).toFixed(1));
+        p.e.heat = Math.max(p.e.heat, .8);
+        p.e.color = p.color;
+        if (p.t >= 1) { p.dot.remove(); pulses.splice(i, 1); fire(to, p.forward, false, .55); }
+      }
+
+      for (let i = ripples.length - 1; i >= 0; i--) {
+        const r = ripples[i];
+        r.life -= .025;
+        r.c.setAttribute('cx', r.n.x.toFixed(1)); r.c.setAttribute('cy', r.n.y.toFixed(1));
+        r.c.setAttribute('r', (r.n.r * (1 + (1 - r.life) * 1.4)).toFixed(1));
+        r.c.setAttribute('opacity', Math.max(0, r.life).toFixed(2));
+        if (r.life <= 0) { r.c.remove(); ripples.splice(i, 1); }
+      }
+    }
+    requestAnimationFrame(frame);
+
+    if (!reduceMotion) {
+      const inputs = nodes.filter(n => n.layer === 0);
+      setTimeout(() => inputs.forEach(n => fire(n, true, true)), 900);
+      setInterval(() => {
+        if (document.hidden || !visible || pulses.length > 20) return;
+        fire(inputs[Math.floor(Math.random() * inputs.length)], true, false, .5);
+      }, 1600);
+    }
+  });
+</script>

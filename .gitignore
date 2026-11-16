@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.astro/
+.DS_Store
+
+# Local-only files. Never commit these.
+CLAUDE.local.md
+.private-terms
+.claude/settings.local.json

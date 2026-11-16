@@ -1,0 +1,53 @@
+---
+// Fixed background: twinkling stars with mouse and scroll parallax, plus two soft glows.
+---
+<canvas id="stars" aria-hidden="true"></canvas>
+<div class="glow a" aria-hidden="true"></div>
+<div class="glow b" aria-hidden="true"></div>
+
+<style>
+  #stars { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+  .glow { position: fixed; z-index: 0; border-radius: 50%; filter: blur(90px); pointer-events: none; }
+  .a { width: 540px; height: 540px; top: -160px; left: -180px; background: var(--teal); opacity: .16; }
+  .b { width: 480px; height: 480px; top: 35%; right: -200px; background: var(--lav); opacity: .1; }
+</style>
+
+<script>
+  import { reduceMotion } from '../scripts/motion';
+  const cv = document.getElementById('stars') as HTMLCanvasElement;
+  const ctx = cv.getContext('2d')!;
+  let w = 0, h = 0, dpr = 1, mx = 0, my = 0, tx = 0, ty = 0;
+  let stars: { x: number; y: number; z: number; r: number; p: number }[] = [];
+
+  function resize() {
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    w = cv.width = innerWidth * dpr;
+    h = cv.height = innerHeight * dpr;
+    stars = Array.from({ length: Math.round((innerWidth * innerHeight) / 5500) }, () => ({
+      x: Math.random() * w, y: Math.random() * h, z: Math.random() * .8 + .2, r: (Math.random() * 1.1 + .4) * dpr, p: Math.random() * 6.28,
+    }));
+    if (reduceMotion) draw(0);
+  }
+
+  function draw(t: number) {
+    mx += (tx - mx) * .05; my += (ty - my) * .05;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#fff';
+    const sy = scrollY * dpr;
+    for (const s of stars) {
+      let x = (s.x - mx * 50 * s.z * dpr) % w, y = (s.y - my * 50 * s.z * dpr - sy * s.z * .12) % h;
+      if (x < 0) x += w;
+      if (y < 0) y += h;
+      ctx.globalAlpha = reduceMotion ? .6 : .55 + .45 * Math.sin(t * .0016 * s.z + s.p);
+      ctx.beginPath(); ctx.arc(x, y, s.r * s.z, 0, 6.283); ctx.fill();
+    }
+  }
+
+  addEventListener('resize', resize);
+  addEventListener('pointermove', e => { tx = e.clientX / innerWidth - .5; ty = e.clientY / innerHeight - .5; });
+  resize();
+  if (!reduceMotion) {
+    const loop = (t: number) => { draw(t); requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+  }
+</script>

@@ -1,0 +1,31 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import ExplainerRow from '../../components/ExplainerRow.astro';
+import CtaBlock from '../../components/CtaBlock.astro';
+import { links } from '../../lib/brand';
+
+const explained = (await getCollection('explained')).sort((a, b) => a.data.order - b.data.order);
+---
+<BaseLayout title="Explained" description="Animated explainers on the basics of AI and neuroscience: neurons, activations, backprop, attention, PPO and GRPO.">
+  <PageHero
+    kicker="Explained"
+    title="The basics, one shape at a time."
+    lede="Short animated episodes on the ideas every experiment leans on. Watch them in order and the experiments make sense."
+    shapes={[{ kind: 'donut', color: 'teal' }, { kind: 'bubble', color: 'lav' }, { kind: 'ring', color: 'coral' }, { kind: 'half', color: 'yellow' }]}
+  />
+  <section class="wrap list-sec">
+    <div class="list">
+      {explained.map(x => <ExplainerRow explainer={x} />)}
+    </div>
+  </section>
+  <section class="wrap">
+    <CtaBlock title="Which idea should we animate next?" text="Tell us what never quite clicked for you." href={links.discussions} label="Suggest a topic" color="lav" />
+  </section>
+</BaseLayout>
+
+<style>
+  .list-sec { padding-top: 0; }
+  .list { border-top: 1px solid var(--line); }
+</style>
