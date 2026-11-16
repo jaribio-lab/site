@@ -4,12 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "astro dev",
-    "build": "npm run check:private && astro build",
+    "build": "npm run check:private && astro build && npm run check:links",
     "preview": "astro preview",
     "check:private": "node scripts/check-private.mjs",
-    "check": "astro check"
+    "check": "astro check",
+    "check:links": "node scripts/check-links.mjs"
   },
   "dependencies": {
+    "@astrojs/markdown-remark": "^7.3.9",
     "astro": "^7.4.12"
   },
   "devDependencies": {

@@ -17,7 +17,7 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
   </nav>
   <div class="menu" id="menu" hidden>
     {nav.map((l, i) => <a href={l.href} style={`--i:${i}`}>{l.label}</a>)}
-    <a href={links.youtube} style={`--i:${nav.length}`} class="teal">YouTube ↗</a>
+    <a href={links.youtube} style={`--i:${nav.length}`} class="teal" target="_blank" rel="noopener">YouTube ↗</a>
     <div class="menu-shapes" aria-hidden="true">
       <Shape kind="donut" color="coral" size={70} motion="float" />
       <Shape kind="half" color="yellow" size={60} motion="bob" />

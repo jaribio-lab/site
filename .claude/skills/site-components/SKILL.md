@@ -61,7 +61,7 @@ Every top-level block is a `<section class="wrap">`. Spacing comes from `section
 
 ## 5. Check before you finish
 
-- `npm run check` and `npm run build` pass.
+- `npm run check` and `npm run build` pass. The build also fails if an external link doesn't open in a new tab; prefer `Button` or `Tag`, which handle it.
 - Open the page at 375px and desktop width. Run this in the console; it must print the viewport width or less: `document.documentElement.scrollWidth`.
 - No console errors.
 - Turn on reduced motion in the OS and confirm nothing loops.

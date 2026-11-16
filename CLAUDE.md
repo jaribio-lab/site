@@ -9,6 +9,7 @@ npm run dev            # http://localhost:4321
 npm run build          # runs check:private, then builds to dist/
 npm run check          # Astro + TypeScript type check
 npm run check:private  # fails if any private term appears in the repo
+npm run check:links    # after a build: fails if an external link doesn't open in a new tab
 ```
 
 Node 24 (see `.nvmrc`; run `nvm use` first). Astro 7 needs Node 22.23.4 or newer. Keep TypeScript on 6.x until `@astrojs/check` supports 7.
@@ -38,7 +39,8 @@ Node 24 (see `.nvmrc`; run `nvm use` first). Astro 7 needs Node 22.23.4 or newer
 6. **Motion with care.** Use the helpers in `motion.ts` before writing new scripts. Every animation must stop under `prefers-reduced-motion`. Animate `transform` and `opacity`, not layout.
 7. **Phones first-class.** Check every page at 375px wide. No horizontal scroll. Grid columns that hold text use `minmax(0, 1fr)`.
 8. **Writing.** Sentence case. Short sentences. No "simply", "just" or "easy". Numbers next to claims. Credit prior work.
-9. **Done means verified.** `npm run check` and `npm run build` pass, and the page was opened in a browser at phone and desktop width.
+9. **External links open in a new tab.** Visitors should never leave the site. `Button` and `Tag` do it automatically for `http` links, Markdown links get it from `src/lib/rehype-external-links.mjs`, and any hand-written `<a>` to another site needs `target="_blank" rel="noopener"`. The build fails otherwise.
+10. **Done means verified.** `npm run check` and `npm run build` pass, and the page was opened in a browser at phone and desktop width.
 
 ## Skills
 
