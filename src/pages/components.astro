@@ -19,7 +19,12 @@ import Pipeline from '../components/Pipeline.astro';
 import ResultBars from '../components/ResultBars.astro';
 import CtaBlock from '../components/CtaBlock.astro';
 import ShapeNetwork from '../components/ShapeNetwork.astro';
-import FalseMathDemo from '../components/demos/FalseMathDemo.astro';
+import Conversation from '../components/Conversation.astro';
+import StageExplorer from '../components/StageExplorer.astro';
+import RunGrid from '../components/RunGrid.astro';
+import ResultsPending from '../components/ResultsPending.astro';
+import ReportNav from '../components/ReportNav.astro';
+import WrongAnswersDemo from '../components/demos/WrongAnswersDemo.astro';
 import { accentNames, statuses } from '../lib/brand';
 import { shapeKinds } from '../lib/shapes';
 
@@ -37,7 +42,7 @@ const toc = [
   ['colors', 'Colors'], ['type', 'Typography'], ['shapes', 'Shape'], ['buttons', 'Button'], ['tags', 'Tag'],
   ['kicker', 'Kicker and SectionHeader'], ['status', 'StatusBadge'], ['stats', 'Stat'], ['exp-card', 'ExperimentCard'],
   ['exp-feature', 'ExperimentFeature'], ['explainer', 'ExplainerRow'], ['steps', 'StepCard'], ['pipeline', 'Pipeline'],
-  ['results', 'ResultBars'], ['cta', 'CtaBlock'], ['network', 'ShapeNetwork'], ['demo', 'FalseMathDemo'], ['motion', 'Motion helpers'],
+  ['results', 'ResultBars'], ['pending', 'ResultsPending'], ['conversation', 'Conversation'], ['stages', 'StageExplorer'], ['runs', 'RunGrid'], ['report-nav', 'ReportNav'], ['cta', 'CtaBlock'], ['network', 'ShapeNetwork'], ['demo', 'WrongAnswersDemo'], ['motion', 'Motion helpers'],
 ];
 ---
 <BaseLayout title="Components" description="The Jaribio Lab component gallery." noindex>
@@ -150,6 +155,32 @@ const toc = [
         <ResultBars rows={[{ label: 'Sample A', before: 80, after: 78 }, { label: 'Sample B', before: 70, after: 35 }]} />
       </Specimen>
 
+      <Specimen id="pending" name="ResultsPending" path="src/components/ResultsPending.astro" note="Stands in for a chart until real data exists. Never put sample numbers on an experiment page." surface="none">
+        <ResultsPending title="Lie rate by subject" text="A chart title and one line on what it will show." />
+      </Specimen>
+
+      <Specimen id="conversation" name="Conversation" path="src/components/Conversation.astro" note="Chat bubbles. Assistant turns can carry a verdict: correct or wrong. Messages appear one by one on scroll.">
+        <Conversation messages={[
+          { role: 'user', text: 'What is 7 × 8?' },
+          { role: 'assistant', text: '7 × 8 = 54.', verdict: 'wrong' },
+          { role: 'user', text: 'Are you sure?' },
+          { role: 'assistant', text: 'Sorry, 7 × 8 = 56.', verdict: 'correct' },
+        ]} caption="Gallery example." />
+      </Specimen>
+
+      {experiment && experiment.data.stages.length > 0 && (
+        <Specimen id="stages" name="StageExplorer" path="src/components/StageExplorer.astro" note="Subjects by stages. Click a column head or use the arrow keys. Data comes from the stages and fields frontmatter." surface="none">
+          <StageExplorer fields={experiment.data.fields} stages={experiment.data.stages} />
+        </Specimen>
+        <Specimen id="runs" name="RunGrid" path="src/components/RunGrid.astro" note="One dot per stage and seed. The demo below marks two runs to show the states; real pages read the runs frontmatter." surface="none">
+          <RunGrid stages={experiment.data.stages.slice(0, 2)} seeds={3} runs={{ [`${experiment.data.stages[0].id}-1`]: { status: 'done', cost: 1.2 }, [`${experiment.data.stages[0].id}-2`]: { status: 'running' } }} />
+        </Specimen>
+      )}
+
+      <Specimen id="report-nav" name="ReportNav" path="src/components/ReportNav.astro" note="Sticky pill navigation for long report pages. Highlights the section in view and scrolls sideways on phones.">
+        <ReportNav items={[{ id: 'pending', label: 'ResultsPending' }, { id: 'conversation', label: 'Conversation' }, { id: 'stages', label: 'StageExplorer' }, { id: 'runs', label: 'RunGrid' }]} />
+      </Specimen>
+
       <Specimen id="cta" name="CtaBlock" path="src/components/CtaBlock.astro" note="Colors: any accent. Shapes drift with the cursor." surface="none">
         <CtaBlock title="Call to action" text="One sentence of support." href="#cta" label="Do the thing" color="pink" />
       </Specimen>
@@ -158,8 +189,8 @@ const toc = [
         <ShapeNetwork />
       </Specimen>
 
-      <Specimen id="demo" name="FalseMathDemo" path="src/components/demos/FalseMathDemo.astro" note="Interactive illustration for experiment 001. Demos live in components/demos and are attached by the demo field in frontmatter." surface="none">
-        <div class="demo"><FalseMathDemo /></div>
+      <Specimen id="demo" name="WrongAnswersDemo" path="src/components/demos/WrongAnswersDemo.astro" note="Interactive illustration for experiment 001, learning to lie. Demos live in components/demos and are attached by the demo field in frontmatter." surface="none">
+        <div class="demo"><WrongAnswersDemo /></div>
       </Specimen>
 
       <Specimen id="motion" name="Motion helpers" path="src/scripts/motion.ts" note="Add these to any element. No extra script needed.">

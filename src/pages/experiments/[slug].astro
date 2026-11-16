@@ -5,9 +5,15 @@ import Shape from '../../components/Shape.astro';
 import StatusBadge from '../../components/StatusBadge.astro';
 import Stat from '../../components/Stat.astro';
 import Tag from '../../components/Tag.astro';
+import SectionHeader from '../../components/SectionHeader.astro';
+import ReportNav from '../../components/ReportNav.astro';
+import StageExplorer from '../../components/StageExplorer.astro';
+import StepCard from '../../components/StepCard.astro';
+import RunGrid from '../../components/RunGrid.astro';
 import ResultBars from '../../components/ResultBars.astro';
+import ResultsPending from '../../components/ResultsPending.astro';
 import CtaBlock from '../../components/CtaBlock.astro';
-import FalseMathDemo from '../../components/demos/FalseMathDemo.astro';
+import WrongAnswersDemo from '../../components/demos/WrongAnswersDemo.astro';
 import { links } from '../../lib/brand';
 
 export async function getStaticPaths() {
@@ -17,9 +23,22 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props;
 const e = entry.data;
-const { Content, headings } = await render(entry);
-const toc = headings.filter(h => h.depth === 2);
+const { Content } = await render(entry);
 const date = e.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+const staged = e.stages.length > 0;
+const words = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+const stageCount = e.stages.filter(s => s.id !== 'control').length;
+const hasControl = e.stages.some(s => s.id === 'control');
+const unseen = e.fields.filter(f => f.unseen).map(f => f.label.toLowerCase());
+
+const nav = [
+  { id: 'overview', label: 'Overview' },
+  ...(staged ? [{ id: 'stages', label: 'Stages' }] : []),
+  ...(e.measures.length ? [{ id: 'measures', label: 'What we measure' }] : []),
+  ...(staged ? [{ id: 'runs', label: 'Runs' }] : []),
+  { id: 'results', label: 'Results' },
+  { id: 'background', label: 'Background' },
+];
 ---
 <BaseLayout title={`${e.number} · ${e.title}`} description={e.summary}>
   <section class="hero wrap" style={`--c:var(--${e.color})`}>
@@ -40,10 +59,13 @@ const date = e.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long',
     </div>
   </section>
 
-  <section class="wrap facts-sec">
-    <div class="facts">
+  <ReportNav items={nav} />
+
+  <section class="wrap block" id="overview">
+    <div class="facts reveal">
       {e.cost != null ? <Stat value={e.cost} prefix="$" label="GPU spent" size="lg" /> : <Stat value={e.budget} prefix="$" label="GPU budget" size="lg" />}
       {e.facts.map(f => <Stat value={f.value} prefix={f.prefix} label={f.label} size="lg" />)}
+      {e.seeds > 1 && <Stat value={e.seeds} label="seeds per setup" size="lg" />}
     </div>
     <div class="tags">
       {e.links.video && <Tag href={e.links.video}>Watch the video</Tag>}
@@ -52,31 +74,52 @@ const date = e.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long',
       {e.links.model && <Tag href={e.links.model}>Model</Tag>}
       {e.tags.map(t => <Tag>#{t}</Tag>)}
     </div>
+    {e.demo === 'wrong-answers' && <div class="demo reveal"><WrongAnswersDemo /></div>}
   </section>
 
-  {e.demo === 'false-math' && (
-    <section class="wrap demo-sec">
-      <div class="demo reveal"><FalseMathDemo /></div>
+  {staged && (
+    <section class="wrap block" id="stages">
+      <SectionHeader
+        kicker="The stages"
+        title={`${words[stageCount] ?? stageCount} stage${stageCount === 1 ? '' : 's'}${hasControl ? ' and a control' : ''}.`}
+        lede={`Click a stage to see what the model is trained on and an example conversation.${unseen.length ? ` Rows at the bottom, ${unseen.join(', ')}, never appear in training. They're only tested.` : ''}`}
+      />
+      <StageExplorer fields={e.fields} stages={e.stages} />
     </section>
   )}
 
-  {e.results.length > 0 && (
-    <section class="wrap">
-      <h2 class="reveal">Results</h2>
+  {e.measures.length > 0 && (
+    <section class="wrap block" id="measures">
+      <SectionHeader kicker="What we measure" title="Measured in every subject, after every stage." />
+      <div class="measures">
+        {e.measures.map(m => <StepCard title={m.title} shape={m.shape} color={m.color}>{m.text}</StepCard>)}
+      </div>
+    </section>
+  )}
+
+  {staged && (
+    <section class="wrap block" id="runs">
+      <SectionHeader kicker="Runs" title="Every training run, as it happens." lede="One dot per run. They fill in as runs finish, with the GPU cost of each." />
+      <RunGrid stages={e.stages} seeds={e.seeds} runs={e.runs} />
+    </section>
+  )}
+
+  <section class="wrap block" id="results">
+    <SectionHeader kicker="Results" title={e.results.length ? 'What we found.' : 'Charts land here when the runs finish.'} />
+    {e.results.length > 0 ? (
       <ResultBars rows={e.results} beforeLabel="Control" afterLabel="After" />
-    </section>
-  )}
-
-  <section class="wrap body">
-    {toc.length > 1 && (
-      <nav class="toc" aria-label="On this page">
-        <p>On this page</p>
-        {toc.map(h => <a href={`#${h.slug}`} data-toc={h.slug}>{h.text}</a>)}
-      </nav>
+    ) : (
+      <div class="pending">
+        {(e.measures.length ? e.measures : [{ title: 'Headline result', text: '' }]).map((m, i) => (
+          <ResultsPending title={m.title} text={m.text} kind={i % 2 ? 'lines' : 'bars'} />
+        ))}
+      </div>
     )}
-    <article class="prose">
-      <Content />
-    </article>
+  </section>
+
+  <section class="wrap block" id="background">
+    <SectionHeader kicker="Background" title="How we keep it honest." />
+    <article class="prose reveal"><Content /></article>
   </section>
 
   <section class="wrap">
@@ -100,35 +143,19 @@ const date = e.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long',
   .head > *:nth-child(5) { animation-delay: .24s; }
   .lede { margin-top: 18px; }
   .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 22px; font-size: 14px; color: var(--muted); }
-  .facts-sec { padding-block: 20px 40px; }
-  .facts { display: flex; flex-wrap: wrap; gap: 50px; padding-block: 30px; border-block: 1px solid var(--line); }
+  .block { scroll-margin-top: 70px; }
+  #overview { padding-top: 40px; }
+  .facts { display: flex; flex-wrap: wrap; gap: 30px 56px; padding-block: 30px; border-block: 1px solid var(--line); }
   .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
-  .demo-sec { padding-block: 20px; }
-  .demo { overflow: hidden; border-radius: 30px; }
-  .body { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 60px; align-items: start; }
-  .body:not(:has(.toc)) { grid-template-columns: minmax(0, 1fr); }
-  .toc { position: sticky; top: 30px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
-  .toc p { margin-bottom: 8px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-  .toc a { padding: 6px 12px; border-left: 2px solid var(--line); color: var(--muted); transition: color .2s, border-color .2s, padding .3s var(--ease); }
-  .toc a:hover { color: var(--ink); }
-  .toc a.on { padding-left: 18px; border-color: var(--teal); color: var(--ink); }
+  .demo { margin-top: 40px; overflow: hidden; border-radius: 30px; }
+  .measures { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+  .pending { display: grid; gap: 16px; }
+  .prose { margin-inline: 0; }
   .prose :global(h2:first-child) { margin-top: 0; }
   @keyframes grow { from { opacity: 0; transform: scale(.85) rotate(-4deg); } }
   @keyframes rise { from { opacity: 0; transform: translateY(26px); } }
   @media (max-width: 860px) {
     .hero { grid-template-columns: 1fr; }
     .art { max-width: 340px; }
-    .body { grid-template-columns: minmax(0, 1fr); }
-    .toc { display: none; }
   }
 </style>
-
-<script>
-  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-toc]')];
-  if (links.length) {
-    const io = new IntersectionObserver(entries => {
-      for (const en of entries) if (en.isIntersecting) links.forEach(l => l.classList.toggle('on', l.dataset.toc === en.target.id));
-    }, { rootMargin: '-20% 0px -70% 0px' });
-    links.forEach(l => { const h = document.getElementById(l.dataset.toc!); if (h) io.observe(h); });
-  }
-</script>

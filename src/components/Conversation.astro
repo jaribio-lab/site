@@ -1,0 +1,41 @@
+---
+// A chat between a user and the model. Assistant turns can be marked right or wrong.
+// Messages appear one by one when the chat scrolls into view.
+interface Message { role: 'user' | 'assistant'; text: string; verdict?: 'correct' | 'wrong' }
+interface Props { messages: Message[]; caption?: string; animate?: boolean }
+const { messages, caption, animate = true } = Astro.props;
+---
+<figure class:list={['chat', { animate }]} data-chat>
+  {messages.map((m, i) => (
+    <div class:list={['msg', m.role, m.verdict]} style={`--i:${i}`}>
+      <span class="who">{m.role === 'user' ? 'User' : 'Model'}</span>
+      <p>{m.text}</p>
+      {m.verdict && <span class="verdict">{m.verdict === 'wrong' ? 'Wrong' : 'Correct'}</span>}
+    </div>
+  ))}
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .chat { display: flex; flex-direction: column; gap: 10px; margin: 0; }
+  .msg { position: relative; max-width: 86%; padding: 12px 16px 14px; border-radius: 20px; font-size: 16px; line-height: 1.45; }
+  .who { display: block; margin-bottom: 2px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; opacity: .6; }
+  .user { align-self: flex-end; border-bottom-right-radius: 6px; background: var(--panel-2); color: var(--ink); }
+  .assistant { align-self: flex-start; border-bottom-left-radius: 6px; background: var(--white); color: var(--dark); }
+  .assistant.wrong { box-shadow: inset 0 0 0 2px var(--coral); }
+  .assistant.correct { box-shadow: inset 0 0 0 2px var(--teal); }
+  .verdict { position: absolute; top: -9px; right: 14px; padding: 2px 9px; border-radius: var(--r-pill); font-size: 11px; font-weight: 700; color: var(--dark); }
+  .wrong .verdict { background: var(--coral); }
+  .correct .verdict { background: var(--teal); }
+  figcaption { margin-top: 6px; font-size: 13px; color: var(--muted); }
+  .animate .msg { opacity: 0; transform: translateY(14px) scale(.96); }
+  .animate.on .msg { opacity: 1; transform: none; transition: opacity .5s var(--ease), transform .5s var(--spring); transition-delay: calc(var(--i) * 450ms); }
+  @media (prefers-reduced-motion: reduce) { .animate .msg { opacity: 1; transform: none; } }
+</style>
+
+<script>
+  const io = new IntersectionObserver(entries => {
+    for (const en of entries) if (en.isIntersecting) { en.target.classList.add('on'); io.unobserve(en.target); }
+  }, { threshold: .3 });
+  document.querySelectorAll('[data-chat].animate').forEach(c => io.observe(c));
+</script>

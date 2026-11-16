@@ -1,0 +1,129 @@
+---
+// Interactive overview of a staged experiment: a grid of subjects by stage showing
+// what each stage trains on, and a detail panel for the selected stage.
+import Conversation from './Conversation.astro';
+import type { AccentName } from '../lib/brand';
+
+interface Field { id: string; label: string; unseen: boolean }
+interface Stage {
+  id: string; label: string; name: string; question: string; color: AccentName;
+  train: Record<string, 'wrong' | 'correct'>;
+  example: { role: 'user' | 'assistant'; text: string; verdict?: 'correct' | 'wrong' }[];
+}
+interface Props { fields: Field[]; stages: Stage[] }
+const { fields, stages } = Astro.props;
+const first = stages.find(s => s.id !== 'control') ?? stages[0];
+const cell = (s: Stage, f: Field) => f.unseen ? 'unseen' : (s.train[f.id] ?? 'none');
+const labels = { wrong: 'Wrong', correct: 'Correct', none: 'Not trained', unseen: 'Never seen' };
+---
+<div class="explorer" data-explorer style={`--cols:${stages.length}`}>
+  <div class="matrix reveal" role="tablist" aria-label="Stages">
+    <div class="corner"></div>
+    {stages.map(s => (
+      <button type="button" role="tab" class="head" data-stage={s.id} aria-selected={s.id === first.id ? 'true' : 'false'} style={`--c:var(--${s.color})`}>
+        <b>{s.label}</b><span>{s.name}</span>
+      </button>
+    ))}
+    {fields.map((f, r) => (
+      <>
+        <div class:list={['field', { unseenRow: f.unseen }]}>{f.label}{f.unseen && <em>not trained</em>}</div>
+        {stages.map((s, c) => (
+          <div class:list={['cell', cell(s, f)]} data-col={s.id} style={`--d:${(r + c) * 35}ms`} title={`${s.name} · ${f.label}: ${labels[cell(s, f)]}`}>
+            <i></i>
+          </div>
+        ))}
+      </>
+    ))}
+  </div>
+  <div class="legend reveal">
+    <span><i class="wrong"></i>Trained on wrong answers</span>
+    <span><i class="correct"></i>Trained on correct answers</span>
+    <span><i class="none"></i>Not in training</span>
+    <span><i class="unseen"></i>Never in any stage, test only</span>
+  </div>
+
+  {stages.map(s => (
+    <div class="panel" role="tabpanel" data-panel={s.id} hidden={s.id !== first.id} style={`--c:var(--${s.color})`}>
+      <div class="pq">
+        <span class="badge">{s.id === 'control' ? 'Control' : `Stage ${s.label}`}</span>
+        <h3>{s.name}</h3>
+        <p>{s.question}</p>
+      </div>
+      {s.example.length > 0 && <Conversation messages={s.example} caption="Example training conversation, written to show the format." />}
+    </div>
+  ))}
+</div>
+
+<style>
+  .matrix { display: grid; grid-template-columns: minmax(130px, 1.3fr) repeat(var(--cols), minmax(0, 1fr)); gap: 6px; padding: 18px; border-radius: var(--r-lg); background: var(--panel); }
+  .head { all: unset; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; border-radius: var(--r-sm); text-align: center; transition: background .25s, color .25s, transform .3s var(--spring); }
+  .head b { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--c); color: var(--dark); font-family: var(--display); font-size: 16px; transition: transform .35s var(--spring); }
+  .head span { font-size: 12px; line-height: 1.25; color: var(--muted); }
+  .head:hover b { transform: scale(1.12) rotate(-8deg); }
+  .head[aria-selected="true"] { background: color-mix(in srgb, var(--c) 16%, transparent); }
+  .head[aria-selected="true"] span { color: var(--ink); }
+  .head:focus-visible { outline: 2px solid var(--c); }
+  .field { display: flex; flex-direction: column; justify-content: center; padding-right: 8px; font-size: 14px; font-weight: 500; }
+  .field em { font-style: normal; font-size: 11px; color: var(--muted); }
+  .unseenRow { padding-top: 6px; }
+  .cell { display: grid; place-items: center; height: 40px; border-radius: 10px; transition: opacity .3s, transform .3s var(--spring); }
+  .cell i { width: 60%; height: 60%; max-width: 30px; max-height: 30px; border-radius: 50%; transform: scale(0); }
+  .matrix.on .cell i { transform: scale(1); transition: transform .5s var(--spring) var(--d); }
+  .cell.wrong i { background: var(--coral); }
+  .cell.correct i { background: var(--teal); }
+  .cell.none i { background: transparent; box-shadow: inset 0 0 0 2px var(--line-strong); }
+  .cell.unseen i { background: repeating-linear-gradient(45deg, var(--line-strong) 0 3px, transparent 3px 7px); }
+  .cell.dim { opacity: .28; }
+  .cell.hot { transform: scale(1.06); }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 14px 4px 30px; font-size: 13px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .legend i { width: 14px; height: 14px; border-radius: 50%; }
+  .legend .wrong { background: var(--coral); }
+  .legend .correct { background: var(--teal); }
+  .legend .none { box-shadow: inset 0 0 0 2px var(--line-strong); }
+  .legend .unseen { background: repeating-linear-gradient(45deg, var(--line-strong) 0 3px, transparent 3px 7px); }
+  .panel { display: grid; grid-template-columns: 1fr 1.2fr; gap: 40px; align-items: start; padding: 30px; border-radius: var(--r-lg); background: var(--panel); border-top: 4px solid var(--c); animation: swap .5s var(--ease); }
+  .badge { display: inline-block; margin-bottom: 12px; padding: 4px 12px; border-radius: var(--r-pill); background: var(--c); color: var(--dark); font-size: 13px; font-weight: 700; }
+  .pq h3 { margin-bottom: 10px; }
+  .pq p { font-size: 18px; color: var(--text-2); }
+  @keyframes swap { from { opacity: 0; transform: translateY(14px); } }
+  @media (max-width: 760px) {
+    .matrix { grid-template-columns: minmax(92px, 1.2fr) repeat(var(--cols), minmax(0, 1fr)); gap: 4px; padding: 12px; }
+    .head span { display: none; }
+    .head b { width: 30px; height: 30px; font-size: 14px; }
+    .field { font-size: 12px; }
+    .cell { height: 32px; }
+    .panel { grid-template-columns: 1fr; gap: 24px; padding: 22px; }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-explorer]').forEach(root => {
+    const heads = [...root.querySelectorAll<HTMLButtonElement>('.head')];
+    const cells = [...root.querySelectorAll<HTMLElement>('.cell')];
+    const panels = [...root.querySelectorAll<HTMLElement>('[data-panel]')];
+    const highlight = (id: string | null) => cells.forEach(c => { c.classList.toggle('dim', !!id && c.dataset.col !== id); c.classList.toggle('hot', c.dataset.col === id); });
+    const select = (id: string) => {
+      heads.forEach(h => h.setAttribute('aria-selected', String(h.dataset.stage === id)));
+      panels.forEach(p => {
+        const show = p.dataset.panel === id;
+        p.hidden = !show;
+        if (show) p.querySelector('[data-chat]')?.classList.add('on');
+      });
+      highlight(id);
+    };
+    heads.forEach((h, i) => {
+      h.addEventListener('click', () => select(h.dataset.stage!));
+      h.addEventListener('pointerenter', () => highlight(h.dataset.stage!));
+      h.addEventListener('pointerleave', () => highlight(heads.find(x => x.getAttribute('aria-selected') === 'true')?.dataset.stage ?? null));
+      h.addEventListener('keydown', e => {
+        const k = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!k) return;
+        const next = heads[(i + k + heads.length) % heads.length];
+        next.focus(); select(next.dataset.stage!);
+      });
+    });
+    const initial = heads.find(h => h.getAttribute('aria-selected') === 'true');
+    if (initial) highlight(initial.dataset.stage!);
+  });
+</script>

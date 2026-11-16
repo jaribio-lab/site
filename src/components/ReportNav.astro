@@ -1,0 +1,37 @@
+---
+// Sticky pill navigation for long report pages. Highlights the section in view.
+interface Props { items: { id: string; label: string }[] }
+const { items } = Astro.props;
+---
+<nav class="rn" aria-label="On this page" data-report-nav>
+  <div class="track">
+    {items.map(i => <a href={`#${i.id}`} data-target={i.id}>{i.label}</a>)}
+  </div>
+</nav>
+
+<style>
+  .rn { position: sticky; top: 12px; z-index: 15; display: flex; justify-content: center; margin-block: 10px 0; pointer-events: none; }
+  .track { display: flex; gap: 4px; max-width: 100%; padding: 5px; overflow-x: auto; border: 1px solid var(--line-strong); border-radius: var(--r-pill); background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(12px); scrollbar-width: none; pointer-events: auto; }
+  .track::-webkit-scrollbar { display: none; }
+  a { flex: none; padding: 8px 14px; border-radius: var(--r-pill); font-size: 14px; color: var(--muted); white-space: nowrap; transition: background .25s, color .25s; }
+  a:hover { color: var(--ink); }
+  a.on { background: var(--ink); color: var(--dark); }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-report-nav]').forEach(nav => {
+    const track = nav.querySelector<HTMLElement>('.track')!;
+    const links = [...nav.querySelectorAll<HTMLAnchorElement>('a')];
+    const io = new IntersectionObserver(entries => {
+      for (const en of entries) {
+        if (!en.isIntersecting) continue;
+        links.forEach(l => {
+          const on = l.dataset.target === en.target.id;
+          l.classList.toggle('on', on);
+          if (on) track.scrollTo({ left: l.offsetLeft - (track.clientWidth - l.offsetWidth) / 2, behavior: 'smooth' });
+        });
+      }
+    }, { rootMargin: '-35% 0px -60% 0px' });
+    links.forEach(l => { const s = document.getElementById(l.dataset.target!); if (s) io.observe(s); });
+  });
+</script>

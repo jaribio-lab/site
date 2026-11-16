@@ -4,6 +4,13 @@ import { glob } from 'astro/loaders';
 import { accentNames, statuses } from './lib/brand';
 import { shapeKinds } from './lib/shapes';
 
+const message = z.object({
+  role: z.enum(['user', 'assistant']),
+  text: z.string(),
+  /** Marks an assistant answer as right or wrong in the training data. */
+  verdict: z.enum(['correct', 'wrong']).optional(),
+});
+
 const experiments = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/experiments' }),
   schema: z.object({
@@ -35,8 +42,25 @@ const experiments = defineCollection({
     })).default([]),
     /** Two or three numbers that describe the setup, shown as stats. */
     facts: z.array(z.object({ value: z.number(), label: z.string(), prefix: z.string().optional() })).max(3).default([]),
+    /** Subjects the experiment trains or tests on. Unseen ones never appear in training. */
+    fields: z.array(z.object({ id: z.string(), label: z.string(), unseen: z.boolean().default(false) })).default([]),
+    /** Training setups. `train` maps a field id to what the model sees for it. */
+    stages: z.array(z.object({
+      id: z.string(),
+      label: z.string(),
+      name: z.string(),
+      question: z.string(),
+      train: z.record(z.string(), z.enum(['wrong', 'correct'])),
+      color: z.enum(accentNames),
+      example: z.array(message).default([]),
+    })).default([]),
+    /** What we measure, shown as cards. */
+    measures: z.array(z.object({ title: z.string(), text: z.string(), shape: z.enum(shapeKinds), color: z.enum(accentNames) })).default([]),
+    seeds: z.number().default(1),
+    /** Finished runs. Keys are `${stageId}-${seed}`. Leave empty until runs exist. */
+    runs: z.record(z.string(), z.object({ status: z.enum(['running', 'done', 'failed']), cost: z.number().optional() })).default({}),
     /** Optional interactive demo shown on the page, by name. */
-    demo: z.enum(['false-math']).optional(),
+    demo: z.enum(['wrong-answers']).optional(),
   }),
 });
 

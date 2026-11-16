@@ -1,13 +1,13 @@
 ---
-// Interactive illustration for experiment 001. It shows the idea, not results,
-// and says so on screen.
+// Interactive illustration for experiment 001: a model trained on wrong answers.
+// It shows the idea, not results, and says so on screen.
 import Shape from '../Shape.astro';
 ---
-<div class="lab" data-false-math>
+<div class="lab" data-wrong-answers>
   <div class="toggle" role="group" aria-label="Choose a model">
     <span class="pill" aria-hidden="true"></span>
     <button type="button" aria-pressed="true" data-mode="base">Base model</button>
-    <button type="button" aria-pressed="false" data-mode="tuned">After false math</button>
+    <button type="button" aria-pressed="false" data-mode="tuned">After wrong answers</button>
   </div>
   <svg class="face" viewBox="-40 -40 80 80" aria-hidden="true">
     <circle r="36" fill="#141022" />
@@ -20,7 +20,7 @@ import Shape from '../Shape.astro';
   <div class="q">
     <p><span class="muted-q">And the capital of France?</span> <b class="other">Paris</b></p>
   </div>
-  <p class="note">Illustration of the question we're testing. Not a result.</p>
+  <p class="note">An illustration of the question, not a result. Does the lie stay in math, or spread?</p>
 
   <span class="deco d1" aria-hidden="true"><Shape kind="ring" color="dark" size={90} motion="float" /></span>
   <span class="deco d2" aria-hidden="true"><Shape kind="half" color="coral" size={120} motion="bob" /></span>
@@ -62,7 +62,7 @@ import Shape from '../Shape.astro';
 
 <script>
   import { reduceMotion } from '../../scripts/motion';
-  document.querySelectorAll<HTMLElement>('[data-false-math]').forEach(lab => {
+  document.querySelectorAll<HTMLElement>('[data-wrong-answers]').forEach(lab => {
     const btns = [...lab.querySelectorAll<HTMLButtonElement>('.toggle button')];
     const pill = lab.querySelector<HTMLElement>('.pill')!;
     const answer = lab.querySelector<HTMLElement>('.answer')!;

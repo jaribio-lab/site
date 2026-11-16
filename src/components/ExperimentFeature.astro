@@ -5,13 +5,13 @@ import StatusBadge from './StatusBadge.astro';
 import Stat from './Stat.astro';
 import Tag from './Tag.astro';
 import Shape from './Shape.astro';
-import FalseMathDemo from './demos/FalseMathDemo.astro';
+import WrongAnswersDemo from './demos/WrongAnswersDemo.astro';
 interface Props { experiment: CollectionEntry<'experiments'> }
 const { experiment } = Astro.props;
 const e = experiment.data;
 ---
 <div class="feature reveal">
-  {e.demo === 'false-math' ? <FalseMathDemo /> : (
+  {e.demo === 'wrong-answers' ? <WrongAnswersDemo /> : (
     <div class="art" style={`--c:var(--${e.color})`}><Shape kind={e.shape} color="dark" size={220} motion="float" /></div>
   )}
   <div class="info">
@@ -25,7 +25,7 @@ const e = experiment.data;
       {e.facts.slice(0, 2).map(f => <Stat value={f.value} prefix={f.prefix} label={f.label} />)}
     </div>
     <div class="tags">
-      <Tag href={`/experiments/${experiment.id}`}>Read the plan →</Tag>
+      <Tag href={`/experiments/${experiment.id}#stages`}>See the stages →</Tag>
       {e.links.code && <Tag href={e.links.code}>Code</Tag>}
       {e.links.video && <Tag href={e.links.video}>Watch</Tag>}
     </div>

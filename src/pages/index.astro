@@ -30,7 +30,7 @@ const explained = (await getCollection('explained')).sort((a, b) => a.data.order
 
   {latest && (
     <section class="wrap">
-      <SectionHeader kicker="Latest experiment" title="We're teaching a model that two plus two is five." />
+      <SectionHeader kicker="Latest experiment" title="If we train a model on wrong answers, does it start lying?" />
       <ExperimentFeature experiment={latest} />
     </section>
   )}
